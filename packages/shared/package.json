@@ -1,0 +1,24 @@
+{
+  "name": "@home-ops/shared",
+  "version": "0.1.0",
+  "private": true,
+  "types": "src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "lint": "eslint src --ext .ts --max-warnings 0",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@home-ops/eslint-config": "workspace:*",
+    "@home-ops/tsconfig": "workspace:*",
+    "@typescript-eslint/eslint-plugin": "^8.24.1",
+    "@typescript-eslint/parser": "^8.24.1",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^10.0.1",
+    "typescript": "^5.7.3"
+  }
+}

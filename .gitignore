@@ -1,0 +1,15 @@
+node_modules/
+.turbo/
+dist/
+.env
+.env.*
+!.env.example
+*.local
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.claude/
+coverage/
+apps/server/src/generated/prisma/

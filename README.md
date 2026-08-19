@@ -1,0 +1,90 @@
+# Home Ops
+
+Personal NAS / Home Server Management Panel，面向长期维护与持续扩展的个人服务器统一管理面板。
+
+## 当前状态
+
+**Identity & Access Management Foundation**。当前包含 MySQL 持久化用户、JWT、全局 RBAC、用户与角色管理、权限驱动路由、审计日志和最小 Dashboard。
+
+## 技术栈
+
+- pnpm workspace + Turborepo + TypeScript
+- React + Vite + React Router + TanStack Query
+- i18next + react-i18next（中文 / English）
+- shadcn/ui 组件约定 + Tailwind CSS
+- NestJS + Passport + JWT + class-validator + Permission Guard
+- MySQL 8.4 + Prisma ORM 7 + MariaDB Driver Adapter + Prisma Migrate + Argon2id
+
+## 项目结构
+
+```text
+apps/
+  web/       React 管理面板
+  server/    NestJS API
+packages/
+  shared/         少量前后端共享 API 类型
+  eslint-config/  共享 ESLint 配置
+  tsconfig/       共享 TypeScript 配置
+docs/             后续设计文档入口
+```
+
+## 安装
+
+项目固定使用 Node.js 22.14.0（Prisma 7 最低要求为 Node.js 20.19 / 22.12 / 24.0）：
+
+```powershell
+nvm use 22.14.0
+corepack enable
+```
+
+```bash
+pnpm install
+```
+
+## 启动
+
+```bash
+pnpm dev
+```
+
+- Web: http://localhost:5173
+- Server: http://localhost:3000
+
+Vite 默认将 `/api` 代理到 NestJS。Server 通过 `apps/server/.env` 中的 `DATABASE_URL` 和 Prisma 7 的 `@prisma/adapter-mariadb` 连接 MySQL。
+
+## 数据库
+
+```bash
+pnpm db:generate
+pnpm db:migrate:deploy
+pnpm db:seed
+```
+
+`db:seed` 会幂等创建权限目录与 `super_admin`、`administrator`、`viewer` 系统角色。首次创建管理员时显式提供密码：
+
+```powershell
+$env:BOOTSTRAP_ADMIN_USERNAME='admin'
+$env:BOOTSTRAP_ADMIN_PASSWORD='your-password'
+pnpm db:bootstrap-admin
+```
+
+## Build 与质量检查
+
+```bash
+pnpm lint
+pnpm typecheck
+pnpm build
+```
+
+## 默认开发账号
+
+```text
+username: admin
+password: admin123
+```
+
+> Development only. 当前本地数据库已初始化该开发账号，正式部署时必须使用独立强密码。
+
+## 环境变量
+
+复制 `apps/server/.env.example` 为 `apps/server/.env` 并配置 `DATABASE_URL` 与 `JWT_SECRET`。生产模式必须显式提供强随机密钥。

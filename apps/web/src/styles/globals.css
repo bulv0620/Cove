@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --background: 210 20% 98%;
+    --foreground: 222 35% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 35% 11%;
+    --primary: 217 91% 52%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 214 25% 94%;
+    --secondary-foreground: 222 35% 15%;
+    --muted: 214 25% 95%;
+    --muted-foreground: 215 16% 40%;
+    --accent: 214 30% 92%;
+    --accent-foreground: 222 35% 15%;
+    --destructive: 0 72% 48%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 22% 87%;
+    --input: 214 22% 82%;
+    --ring: 217 91% 52%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    color-scheme: dark;
+    --background: 222 32% 7%;
+    --foreground: 210 20% 96%;
+    --card: 222 28% 9%;
+    --card-foreground: 210 20% 96%;
+    --primary: 213 94% 68%;
+    --primary-foreground: 222 40% 10%;
+    --secondary: 217 22% 15%;
+    --secondary-foreground: 210 20% 94%;
+    --muted: 217 22% 14%;
+    --muted-foreground: 215 16% 67%;
+    --accent: 217 24% 17%;
+    --accent-foreground: 210 20% 96%;
+    --destructive: 0 72% 58%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 217 20% 20%;
+    --input: 217 20% 25%;
+    --ring: 213 94% 68%;
+  }
+
+  * {
+    @apply border-border;
+  }
+  html {
+    @apply bg-background;
+  }
+  body {
+    @apply min-h-dvh bg-background font-sans text-foreground antialiased;
+  }
+  button,
+  a {
+    @apply touch-manipulation;
+  }
+  ::selection {
+    @apply bg-primary/20 text-foreground;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,175 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum RoleStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum PermissionStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum PermissionType {
+  PAGE
+  ACTION
+}
+
+enum ResourceStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum ScopeType {
+  GLOBAL
+  NODE
+  STORAGE
+  SERVICE
+}
+
+enum AuditResult {
+  SUCCESS
+  FAILURE
+}
+
+model User {
+  id                 String              @id @db.Char(36)
+  username           String              @unique(map: "users_username_key") @db.VarChar(64)
+  displayName        String?             @map("display_name") @db.VarChar(100)
+  status             UserStatus          @default(ACTIVE)
+  locale             String?             @db.VarChar(10)
+  authVersion        Int                 @default(1) @map("auth_version")
+  isSuperAdmin       Boolean             @default(false) @map("is_super_admin")
+  lastLoginAt        DateTime?           @map("last_login_at") @db.DateTime(3)
+  createdAt          DateTime            @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt          DateTime            @updatedAt @map("updated_at") @db.DateTime(3)
+  passwordCredential PasswordCredential?
+  roleAssignments    RoleAssignment[]
+
+  @@map("users")
+}
+
+model Role {
+  id              String           @id @db.Char(36)
+  code            String           @unique(map: "roles_code_key") @db.VarChar(64)
+  name            String           @db.VarChar(100)
+  description     String?          @db.VarChar(255)
+  status          RoleStatus       @default(ACTIVE)
+  isSystem        Boolean          @default(false) @map("is_system")
+  createdBy       String?          @map("created_by") @db.Char(36)
+  createdAt       DateTime         @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt       DateTime         @updatedAt @map("updated_at") @db.DateTime(3)
+  permissions     RolePermission[]
+  roleAssignments RoleAssignment[]
+
+  @@map("roles")
+}
+
+model Resource {
+  id          String         @id @db.Char(36)
+  code        String         @unique(map: "resources_code_key") @db.VarChar(128)
+  module      String         @db.VarChar(64)
+  name        String         @db.VarChar(100)
+  description String?        @db.VarChar(255)
+  icon        String?        @db.VarChar(64)
+  sortOrder   Int            @default(0) @map("sort_order")
+  status      ResourceStatus @default(ACTIVE)
+  createdAt   DateTime       @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt   DateTime       @updatedAt @map("updated_at") @db.DateTime(3)
+  permissions Permission[]
+
+  @@map("resources")
+}
+
+model Permission {
+  id          String           @id @db.Char(36)
+  code        String           @unique(map: "permissions_code_key") @db.VarChar(128)
+  action      String           @db.VarChar(64)
+  name        String           @db.VarChar(100)
+  description String?          @db.VarChar(255)
+  type        PermissionType   @default(ACTION)
+  parentId    String?          @map("parent_id") @db.Char(36)
+  sortOrder   Int              @default(0) @map("sort_order")
+  status      PermissionStatus @default(ACTIVE)
+  resourceId  String           @map("resource_id") @db.Char(36)
+  createdAt   DateTime         @default(now()) @map("created_at") @db.DateTime(3)
+  parent      Permission?      @relation("PermissionHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Permission[]     @relation("PermissionHierarchy")
+  roles       RolePermission[]
+  resource    Resource         @relation(fields: [resourceId], references: [id], onDelete: Restrict)
+
+  @@index([parentId, sortOrder])
+  @@index([resourceId])
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String     @map("role_id") @db.Char(36)
+  permissionId String     @map("permission_id") @db.Char(36)
+  grantedBy    String?    @map("granted_by") @db.Char(36)
+  createdAt    DateTime   @default(now()) @map("created_at") @db.DateTime(3)
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+model RoleAssignment {
+  id         String    @id @db.Char(36)
+  userId     String    @map("user_id") @db.Char(36)
+  roleId     String    @map("role_id") @db.Char(36)
+  scopeType  ScopeType @default(GLOBAL) @map("scope_type")
+  scopeId    String    @default("*") @map("scope_id") @db.VarChar(64)
+  assignedBy String?   @map("assigned_by") @db.Char(36)
+  expiresAt  DateTime? @map("expires_at") @db.DateTime(3)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role       Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId, scopeType, scopeId], map: "role_assignments_scope_key")
+  @@index([userId, scopeType, scopeId])
+  @@index([roleId])
+  @@map("role_assignments")
+}
+
+model AuditLog {
+  id          String      @id @db.Char(36)
+  actorUserId String?     @map("actor_user_id") @db.Char(36)
+  action      String      @db.VarChar(128)
+  targetType  String      @map("target_type") @db.VarChar(64)
+  targetId    String?     @map("target_id") @db.VarChar(64)
+  result      AuditResult @default(SUCCESS)
+  ipAddress   String?     @map("ip_address") @db.VarChar(45)
+  metadata    Json?
+  createdAt   DateTime    @default(now()) @map("created_at") @db.DateTime(3)
+
+  @@index([actorUserId, createdAt])
+  @@index([targetType, targetId, createdAt])
+  @@map("audit_logs")
+}
+
+model PasswordCredential {
+  userId            String   @id @map("user_id") @db.Char(36)
+  passwordHash      String   @map("password_hash") @db.VarChar(255)
+  passwordChangedAt DateTime @default(now()) @map("password_changed_at") @db.DateTime(3)
+  createdAt         DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_credentials")
+}
