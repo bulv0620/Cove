@@ -33,9 +33,10 @@ export class RolesService {
     return this.prisma.permission.findMany({
       where: {
         status: PermissionStatus.ACTIVE,
-        resource: { module: 'identity', status: 'ACTIVE' },
+        resource: { status: 'ACTIVE' },
       },
       orderBy: [
+        { resource: { module: 'asc' } },
         { resource: { sortOrder: 'asc' } },
         { resourceId: 'asc' },
         { sortOrder: 'asc' },
@@ -73,7 +74,7 @@ export class RolesService {
           where: {
             permission: {
               status: PermissionStatus.ACTIVE,
-              resource: { module: 'identity', status: 'ACTIVE' },
+              resource: { status: 'ACTIVE' },
             },
           },
           include: { permission: { include: { resource: true } } },

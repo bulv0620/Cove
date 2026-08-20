@@ -31,7 +31,6 @@ export class ResourcesService {
 
   async list(): Promise<ResourceItem[]> {
     const resources = await this.prisma.resource.findMany({
-      where: { module: 'identity' },
       orderBy: [{ module: 'asc' }, { sortOrder: 'asc' }, { code: 'asc' }],
       include: {
         permissions: { orderBy: [{ type: 'asc' }, { sortOrder: 'asc' }, { action: 'asc' }] },
@@ -44,13 +43,14 @@ export class ResourcesService {
   }
 
   async create(input: CreateResourceRequest, actor: ActorContext): Promise<ResourceItem> {
-    const module = input.code.split('.')[0] ?? input.code;
+    const module = input.module;
+    const code = `${module}.${input.key.trim()}`;
     try {
       const resource = await this.prisma.$transaction(async (transaction) => {
         const created = await transaction.resource.create({
           data: {
             id: uuidv7(),
-            code: input.code.trim(),
+            code,
             module,
             name: input.name.trim(),
             description: input.description?.trim() || null,
@@ -79,7 +79,7 @@ export class ResourcesService {
         targetType: 'RESOURCE',
         targetId: resource.id,
         ipAddress: actor.ipAddress,
-        metadata: { code: input.code, module },
+        metadata: { code, module },
       });
       return (await this.list()).find(({ id }) => id === resource.id)!;
     } catch (error: unknown) {
@@ -153,7 +153,7 @@ export class ResourcesService {
     actor: ActorContext,
   ): Promise<PermissionSummary> {
     const resource = await this.prisma.resource.findFirst({
-      where: { id: resourceId, module: 'identity' },
+      where: { id: resourceId },
       include: { permissions: { where: { type: PermissionType.PAGE }, take: 1 } },
     });
     if (!resource) throw new NotFoundException('Resource not found.');

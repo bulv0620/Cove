@@ -25,7 +25,7 @@ export class PermissionsService {
                   where: {
                     permission: {
                       status: PermissionStatus.ACTIVE,
-                      resource: { status: 'ACTIVE', module: 'identity' },
+                      resource: { status: 'ACTIVE' },
                     },
                   },
                   include: { permission: true },
@@ -49,7 +49,7 @@ export class PermissionsService {
             .findMany({
               where: {
                 status: PermissionStatus.ACTIVE,
-                resource: { module: 'identity', status: 'ACTIVE' },
+                resource: { status: 'ACTIVE' },
               },
               select: { code: true },
             })

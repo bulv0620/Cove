@@ -276,7 +276,7 @@ export class UsersService {
       const allPermissionCodes = await this.prisma.permission.findMany({
         where: {
           status: PermissionStatus.ACTIVE,
-          resource: { module: 'identity', status: 'ACTIVE' },
+          resource: { status: 'ACTIVE' },
         },
         select: { code: true },
       });

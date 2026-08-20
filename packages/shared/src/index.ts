@@ -26,6 +26,8 @@ export type RoleStatus = 'ACTIVE' | 'DISABLED';
 export type ResourceStatus = 'ACTIVE' | 'DISABLED';
 export type PermissionType = 'PAGE' | 'ACTION';
 
+export type ResourceModuleCode = 'identity' | 'infrastructure' | 'system';
+
 export interface RoleReference {
   id: string;
   code: string;
@@ -68,7 +70,8 @@ export interface PermissionSummary {
 }
 
 export interface CreateResourceRequest {
-  code: string;
+  module: ResourceModuleCode;
+  key: string;
   name: string;
   description?: string;
   icon?: string;

@@ -11,6 +11,7 @@ export type {
   PermissionSummary,
   ResetPasswordRequest,
   ResourceItem,
+  ResourceModuleCode,
   ResourceReference,
   ResourceStatus,
   UpdateResourceRequest,

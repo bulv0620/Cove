@@ -1,4 +1,5 @@
 import {
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -8,11 +9,18 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
+import type { ResourceModuleCode } from '@home-ops/shared';
+
+const RESOURCE_MODULE_CODES: ResourceModuleCode[] = ['identity', 'infrastructure', 'system'];
 
 export class CreateResourceDto {
   @IsString()
-  @Matches(/^identity\.[a-z][a-z0-9_]{1,54}$/)
-  code!: string;
+  @IsIn(RESOURCE_MODULE_CODES)
+  module!: ResourceModuleCode;
+
+  @IsString()
+  @Matches(/^[a-z][a-z0-9_]{1,63}$/)
+  key!: string;
 
   @IsString()
   @MinLength(2)
