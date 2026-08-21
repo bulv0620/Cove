@@ -59,10 +59,16 @@ export function UserMenu(): JSX.Element {
         >
           <CircleUserRound className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
           <span className="hidden min-w-0 sm:block">
-            <span className="block max-w-32 truncate text-xs font-medium leading-4">
+            <span
+              className="block max-w-40 truncate text-xs font-medium leading-4"
+              title={user?.displayName || user?.username}
+            >
               {user?.displayName || user?.username}
             </span>
-            <span className="block max-w-32 truncate text-[10px] leading-3 text-muted-foreground">
+            <span
+              className="block max-w-40 truncate text-[10px] leading-3 text-muted-foreground"
+              title={roleLabel}
+            >
               {roleLabel}
             </span>
           </span>
