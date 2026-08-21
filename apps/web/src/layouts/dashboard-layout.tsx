@@ -21,20 +21,21 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }): JSX.Elemen
         <Logo />
       </div>
       <nav className="flex-1 overflow-y-auto px-3 py-5" aria-label={t('navigation.primary')}>
-        {navigationGroups.map((group) => (
-          <div key={group.translationKey} className="mb-6">
-            <p className="mb-2 px-3 font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-              {t(group.translationKey)}
-            </p>
-            <div className="space-y-1">
-              {group.items
-                .filter(
-                  (item) =>
-                    !item.pagePermission ||
-                    user?.isSuperAdmin ||
-                    user?.permissions.includes(item.pagePermission),
-                )
-                .map((item) => {
+        {navigationGroups.map((group) => {
+          const visibleItems = group.items.filter(
+            (item) =>
+              !item.pagePermission ||
+              user?.isSuperAdmin ||
+              user?.permissions.includes(item.pagePermission),
+          );
+          if (visibleItems.length === 0) return null;
+          return (
+            <div key={group.translationKey} className="mb-6">
+              <p className="mb-2 px-3 font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                {t(group.translationKey)}
+              </p>
+              <div className="space-y-1">
+                {visibleItems.map((item) => {
                   const Icon = item.icon;
                   if (!item.to) {
                     return (
@@ -72,9 +73,10 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }): JSX.Elemen
                     </NavLink>
                   );
                 })}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </nav>
       <div className="border-t px-5 py-4 text-xs text-muted-foreground">
         <div className="flex items-center gap-2">
