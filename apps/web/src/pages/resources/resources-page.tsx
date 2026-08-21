@@ -15,6 +15,13 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Modal } from '@/components/ui/modal';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useAuth } from '@/features/auth/hooks';
 import { resourcesApi } from '@/features/identity/api';
 import { ResourceIcon } from '@/features/identity/components/permission-picker';
@@ -503,18 +510,22 @@ function ResourceForm({
             label={t('resources.module')}
             hint={t(resourceModules.find(({ code }) => code === module)!.descriptionKey)}
           >
-            <select
+            <Select
               required
-              className="h-11 w-full rounded-md border bg-background px-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-sm"
               value={module}
-              onChange={(event) => setModule(event.target.value as ResourceModuleCode)}
+              onValueChange={(value) => setModule(value as ResourceModuleCode)}
             >
-              {resourceModules.map((option) => (
-                <option key={option.code} value={option.code}>
-                  {t(option.labelKey)}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {resourceModules.map((option) => (
+                  <SelectItem key={option.code} value={option.code}>
+                    {t(option.labelKey)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </Field>
           <Field label={t('resources.resourceKey')} hint={t('resources.resourceKeyHint')}>
             <Input
@@ -784,14 +795,15 @@ function StatusSelect({
 }): JSX.Element {
   const { t } = useTranslation();
   return (
-    <select
-      className="h-11 w-full rounded-md border bg-background px-3 text-sm"
-      value={value}
-      onChange={(e) => onChange(e.target.value as 'ACTIVE' | 'DISABLED')}
-    >
-      <option value="ACTIVE">{t('common.active')}</option>
-      <option value="DISABLED">{t('common.disabled')}</option>
-    </select>
+    <Select value={value} onValueChange={(next) => onChange(next as 'ACTIVE' | 'DISABLED')}>
+      <SelectTrigger>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="ACTIVE">{t('common.active')}</SelectItem>
+        <SelectItem value="DISABLED">{t('common.disabled')}</SelectItem>
+      </SelectContent>
+    </Select>
   );
 }
 function Status({ active, compact = false }: { active: boolean; compact?: boolean }): JSX.Element {
