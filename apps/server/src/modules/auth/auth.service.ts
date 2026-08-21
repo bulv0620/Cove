@@ -1,7 +1,12 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserStatus } from '../../generated/prisma/enums';
-import type { AuthUser, LoginRequest, LoginResponse } from '@home-ops/shared';
+import type {
+  AuthUser,
+  ChangePasswordRequest,
+  LoginRequest,
+  LoginResponse,
+} from '@home-ops/shared';
 import argon2 from 'argon2';
 import { PermissionsService } from '../access-control/permissions.service';
 import { UsersService } from '../identity/users.service';
@@ -56,6 +61,10 @@ export class AuthService {
     const user = await this.permissionsService.getAuthUser(payload.sub);
     if (!user || user.authVersion !== payload.av) throw new UnauthorizedException();
     return this.toPublicAuthUser(user);
+  }
+
+  changePassword(userId: string, input: ChangePasswordRequest, ipAddress?: string): Promise<void> {
+    return this.usersService.changeOwnPassword(userId, input, ipAddress);
   }
 
   private toPublicAuthUser(user: AuthUser & { authVersion: number }): AuthUser {

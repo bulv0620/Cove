@@ -1,7 +1,7 @@
-import { Eye, EyeOff, LoaderCircle, LockKeyhole, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, Eye, EyeOff, LoaderCircle, LockKeyhole, ShieldCheck } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { LanguageSwitcher } from '@/components/shared/language-switcher';
 import { Logo } from '@/components/shared/logo';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ export function LoginPage(): JSX.Element {
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -79,6 +80,15 @@ export function LoginPage(): JSX.Element {
           </div>
 
           <form className="space-y-5" onSubmit={(event) => void handleSubmit(event)} noValidate>
+            {searchParams.get('passwordChanged') === '1' && (
+              <div
+                role="status"
+                className="flex gap-3 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-3 text-sm text-emerald-700 dark:text-emerald-300"
+              >
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>{t('auth.changePassword.success')}</span>
+              </div>
+            )}
             <div className="space-y-2">
               <label htmlFor="username" className="text-sm font-medium">
                 {t('auth.username')}

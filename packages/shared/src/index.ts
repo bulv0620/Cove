@@ -17,6 +17,11 @@ export interface LoginResponse {
   user: AuthUser;
 }
 
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
 export interface SystemStatus {
   status: 'online';
 }

@@ -1,10 +1,11 @@
-import { AppWindow, ChevronRight, CircleUserRound, LogOut, Menu, Moon, Sun, X } from 'lucide-react';
+import { AppWindow, ChevronRight, Menu, Moon, Sun, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { LanguageSwitcher } from '@/components/shared/language-switcher';
 import { Logo } from '@/components/shared/logo';
 import { Button } from '@/components/ui/button';
+import { UserMenu } from '@/features/auth/components/user-menu';
 import { navigationGroups, routedNavigationItems } from '@/app/navigation';
 import { useTheme } from '@/app/theme-provider';
 import { useAuth } from '@/features/auth/hooks';
@@ -88,7 +89,6 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }): JSX.Elemen
 
 export function DashboardLayout(): JSX.Element {
   const { t } = useTranslation();
-  const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -159,20 +159,7 @@ export function DashboardLayout(): JSX.Element {
               {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
             <div className="mx-1 hidden h-6 w-px bg-border sm:block" />
-            <div className="hidden items-center gap-2 px-2 sm:flex">
-              <CircleUserRound className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
-              <div className="text-left">
-                <p className="text-xs font-medium leading-4">{user?.username}</p>
-                <p className="text-[10px] leading-3 text-muted-foreground">
-                  {user?.isSuperAdmin
-                    ? t('header.superAdministrator')
-                    : user?.roleCodes.join(', ') || t('header.noRole')}
-                </p>
-              </div>
-            </div>
-            <Button variant="ghost" size="icon" onClick={logout} aria-label={t('header.signOut')}>
-              <LogOut className="h-4 w-4" />
-            </Button>
+            <UserMenu />
           </div>
         </header>
         <main

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -7,6 +8,7 @@ import {
 import type {
   AssignRolesRequest,
   AuthUser,
+  ChangePasswordRequest,
   ChangeUserStatusRequest,
   CreateUserRequest,
   ManagedUser,
@@ -213,6 +215,50 @@ export class UsersService {
       targetType: 'USER',
       targetId: id,
       ipAddress: actor.ipAddress,
+    });
+  }
+
+  async changeOwnPassword(
+    id: string,
+    input: ChangePasswordRequest,
+    ipAddress?: string,
+  ): Promise<void> {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: { passwordCredential: true },
+    });
+    if (!user?.passwordCredential) {
+      throw new BadRequestException('This account does not have a password credential.');
+    }
+    const currentPasswordValid = await argon2.verify(
+      user.passwordCredential.passwordHash,
+      input.currentPassword,
+    );
+    if (!currentPasswordValid) {
+      throw new BadRequestException('Current password is incorrect.');
+    }
+    const passwordUnchanged = await argon2.verify(
+      user.passwordCredential.passwordHash,
+      input.newPassword,
+    );
+    if (passwordUnchanged) {
+      throw new BadRequestException('New password must be different from the current password.');
+    }
+
+    const passwordHash = await argon2.hash(input.newPassword, passwordHashOptions);
+    await this.prisma.$transaction([
+      this.prisma.passwordCredential.update({
+        where: { userId: id },
+        data: { passwordHash, passwordChangedAt: new Date() },
+      }),
+      this.prisma.user.update({ where: { id }, data: { authVersion: { increment: 1 } } }),
+    ]);
+    await this.audit.record({
+      actorUserId: id,
+      action: 'auth.password.change',
+      targetType: 'USER',
+      targetId: id,
+      ipAddress,
     });
   }
 
