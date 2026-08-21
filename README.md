@@ -28,6 +28,12 @@ packages/
 docs/             后续设计文档入口
 ```
 
+## 项目文档与 Spec Coding
+
+长期产品事实、架构边界、领域行为、变更 Spec、质量门槛和发布规则统一维护在 [`docs/README.md`](docs/README.md)。涉及行为、API、数据、安全、部署或外部集成的改动，应先创建并批准 Spec，再按照任务清单实施。
+
+当前 Network 方向的 Draft Spec：[`docs/specs/2026-08-21-network-control-plane/spec.md`](docs/specs/2026-08-21-network-control-plane/spec.md)。
+
 ## 安装
 
 项目固定使用 Node.js 22.14.0（Prisma 7 最低要求为 Node.js 20.19 / 22.12 / 24.0）：
