@@ -70,6 +70,7 @@ export class PermissionsService {
       permissions,
       roleCodes,
       isSuperAdmin,
+      mustChangePassword: user.mustChangePassword,
     };
   }
 }

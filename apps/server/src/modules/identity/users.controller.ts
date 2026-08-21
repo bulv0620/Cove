@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   HttpCode,
   Param,
   Patch,
@@ -11,7 +12,12 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import type { AuthUser, ManagedUser } from '@home-ops/shared';
+import type {
+  AuthUser,
+  CreateUserResponse,
+  ManagedUser,
+  ResetPasswordResponse,
+} from '@home-ops/shared';
 import type { Request } from 'express';
 import { CurrentUser } from '../../core/decorators/current-user.decorator';
 import { RequirePermissions } from '../../core/decorators/require-permissions.decorator';
@@ -20,7 +26,6 @@ import { PermissionsGuard } from '../../core/guards/permissions.guard';
 import { AssignRolesDto } from './dto/assign-roles.dto';
 import { ChangeUserStatusDto } from './dto/change-user-status.dto';
 import { CreateUserDto } from './dto/create-user.dto';
-import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { UsersService } from './users.service';
 
@@ -37,7 +42,12 @@ export class UsersController {
 
   @RequirePermissions('identity.user.create', 'identity.user.assign_role')
   @Post()
-  create(@Body() input: CreateUserDto, @CurrentUser() actor: AuthUser, @Req() request: Request) {
+  @Header('Cache-Control', 'no-store')
+  create(
+    @Body() input: CreateUserDto,
+    @CurrentUser() actor: AuthUser,
+    @Req() request: Request,
+  ): Promise<CreateUserResponse> {
     return this.users.create(input, { ...actor, ipAddress: request.ip });
   }
 
@@ -76,14 +86,13 @@ export class UsersController {
 
   @RequirePermissions('identity.user.reset_password')
   @Post(':id/reset-password')
-  @HttpCode(204)
+  @Header('Cache-Control', 'no-store')
   async resetPassword(
     @Param('id') id: string,
-    @Body() input: ResetPasswordDto,
     @CurrentUser() actor: AuthUser,
     @Req() request: Request,
-  ): Promise<void> {
-    await this.users.resetPassword(id, input, { ...actor, ipAddress: request.ip });
+  ): Promise<ResetPasswordResponse> {
+    return this.users.resetPassword(id, { ...actor, ipAddress: request.ip });
   }
 
   @RequirePermissions('identity.user.delete')

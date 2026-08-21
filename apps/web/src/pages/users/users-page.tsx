@@ -1,12 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Check,
+  Copy,
   KeyRound,
   LoaderCircle,
   RefreshCw,
   Search,
   ShieldCheck,
   Trash2,
+  TriangleAlert,
   UserCog,
   UserPlus,
 } from 'lucide-react';
@@ -43,6 +45,10 @@ export function UsersPage(): JSX.Element {
   const [search, setSearch] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [temporaryCredential, setTemporaryCredential] = useState<{
+    username: string;
+    password: string;
+  } | null>(null);
   const users = useQuery({ queryKey: usersKey, queryFn: usersApi.list });
   const roles = useQuery({ queryKey: rolesKey, queryFn: rolesApi.list });
   const can = (permission: string): boolean =>
@@ -87,8 +93,9 @@ export function UsersPage(): JSX.Element {
           <CreateUserForm
             roles={roles.data.filter((role) => role.status === 'ACTIVE')}
             onCancel={() => setShowCreate(false)}
-            onCreated={async () => {
+            onCreated={async ({ username, password }) => {
               setShowCreate(false);
+              setTemporaryCredential({ username, password });
               await queryClient.invalidateQueries({ queryKey: usersKey });
             }}
           />
@@ -225,10 +232,93 @@ export function UsersPage(): JSX.Element {
               setSelectedId(null);
               await queryClient.invalidateQueries({ queryKey: usersKey });
             }}
+            onPasswordReset={(password) => {
+              setSelectedId(null);
+              setTemporaryCredential({ username: selected.username, password });
+            }}
           />
         </Modal>
       )}
+
+      {temporaryCredential && (
+        <TemporaryPasswordDialog
+          username={temporaryCredential.username}
+          password={temporaryCredential.password}
+          onClose={() => setTemporaryCredential(null)}
+        />
+      )}
     </div>
+  );
+}
+
+function TemporaryPasswordDialog({
+  username,
+  password,
+  onClose,
+}: {
+  username: string;
+  password: string;
+  onClose: () => void;
+}): JSX.Element {
+  const { t } = useTranslation();
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'error'>('idle');
+  const copyPassword = async () => {
+    try {
+      await navigator.clipboard.writeText(password);
+      setCopyState('copied');
+    } catch {
+      setCopyState('error');
+    }
+  };
+  const confirmClose = () => {
+    if (!window.confirm(t('users.discardTemporaryPasswordConfirm'))) return;
+    onClose();
+  };
+
+  return (
+    <Modal
+      open
+      title={t('users.temporaryPasswordTitle')}
+      description={t('users.temporaryPasswordDescription', { name: username })}
+      onClose={confirmClose}
+      className="sm:max-w-lg"
+    >
+      <div className="space-y-5">
+        <div>
+          <p className="mb-2 text-sm font-medium">{t('users.temporaryPasswordLabel')}</p>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <code className="min-h-11 flex-1 select-all overflow-x-auto rounded-md border bg-muted px-3 py-2.5 font-mono text-sm font-semibold tracking-wide">
+              {password}
+            </code>
+            <Button type="button" variant="outline" onClick={() => void copyPassword()}>
+              {copyState === 'copied' ? (
+                <Check className="mr-2 h-4 w-4" aria-hidden="true" />
+              ) : (
+                <Copy className="mr-2 h-4 w-4" aria-hidden="true" />
+              )}
+              {copyState === 'copied' ? t('users.passwordCopied') : t('users.copyPassword')}
+            </Button>
+          </div>
+          {copyState === 'error' && (
+            <p role="alert" className="mt-2 text-sm text-destructive">
+              {t('users.passwordCopyFailed')}
+            </p>
+          )}
+        </div>
+        <div className="flex gap-3 rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-sm">
+          <TriangleAlert
+            className="mt-0.5 h-4 w-4 shrink-0 text-amber-700 dark:text-amber-300"
+            aria-hidden="true"
+          />
+          <p>{t('users.temporaryPasswordWarning')}</p>
+        </div>
+        <div className="flex justify-end">
+          <Button type="button" onClick={onClose}>
+            {t('users.closeTemporaryPassword')}
+          </Button>
+        </div>
+      </div>
+    </Modal>
   );
 }
 
@@ -309,17 +399,20 @@ function CreateUserForm({
 }: {
   roles: RoleOption[];
   onCancel: () => void;
-  onCreated: () => Promise<void>;
+  onCreated: (credential: { username: string; password: string }) => Promise<void>;
 }): JSX.Element {
   const { t } = useTranslation();
   const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [password, setPassword] = useState('');
   const [roleIds, setRoleIds] = useState<string[]>([]);
-  const mutation = useMutation({ mutationFn: usersApi.create, onSuccess: onCreated });
+  const mutation = useMutation({
+    mutationFn: usersApi.create,
+    onSuccess: ({ user, temporaryPassword }) =>
+      onCreated({ username: user.username, password: temporaryPassword }),
+  });
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    mutation.mutate({ username, displayName: displayName || undefined, password, roleIds });
+    mutation.mutate({ username, displayName: displayName || undefined, roleIds });
   };
   return (
     <form onSubmit={submit} className="space-y-5">
@@ -337,16 +430,6 @@ function CreateUserForm({
           <Input value={displayName} onChange={(event) => setDisplayName(event.target.value)} />
         </Field>
       </div>
-      <Field label={t('users.initialPassword')} hint={t('users.passwordHint')}>
-        <Input
-          required
-          minLength={8}
-          type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          autoComplete="new-password"
-        />
-      </Field>
       <Field label={t('users.roles')}>
         <RolePicker roles={roles} selected={roleIds} onChange={setRoleIds} />
       </Field>
@@ -361,7 +444,7 @@ function CreateUserForm({
         <Button type="button" variant="ghost" onClick={onCancel}>
           {t('common.cancel')}
         </Button>
-        <Button type="submit" disabled={mutation.isPending || !username || password.length < 8}>
+        <Button type="submit" disabled={mutation.isPending || !username}>
           {mutation.isPending && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
           {t('common.create')}
         </Button>
@@ -377,6 +460,7 @@ function UserEditor({
   can,
   onChanged,
   onDeleted,
+  onPasswordReset,
 }: {
   user: ManagedUser;
   roles: RoleOption[];
@@ -384,16 +468,15 @@ function UserEditor({
   can: (permission: string) => boolean;
   onChanged: () => Promise<unknown>;
   onDeleted: () => Promise<void>;
+  onPasswordReset: (password: string) => void;
 }): JSX.Element {
   const { t } = useTranslation();
   const [displayName, setDisplayName] = useState(user.displayName ?? '');
   const [roleIds, setRoleIds] = useState(user.roles.map(({ id }) => id));
-  const [password, setPassword] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   useEffect(() => {
     setDisplayName(user.displayName ?? '');
     setRoleIds(user.roles.map(({ id }) => id));
-    setPassword('');
     setMessage(null);
   }, [user]);
   const save = useMutation({
@@ -421,11 +504,8 @@ function UserEditor({
     onSuccess: onChanged,
   });
   const reset = useMutation({
-    mutationFn: () => usersApi.resetPassword(user.id, { password }),
-    onSuccess: () => {
-      setPassword('');
-      setMessage(t('users.passwordReset'));
-    },
+    mutationFn: () => usersApi.resetPassword(user.id),
+    onSuccess: ({ temporaryPassword }) => onPasswordReset(temporaryPassword),
   });
   const remove = useMutation({
     mutationFn: () => usersApi.remove(user.id),
@@ -488,25 +568,23 @@ function UserEditor({
           </div>
           <div className="border-t pt-5">
             <h3 className="text-sm font-semibold">{t('users.resetPassword')}</h3>
-            <p className="mt-1 text-sm text-muted-foreground">{t('users.passwordHint')}</p>
-            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-              <Input
-                type="password"
-                minLength={8}
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder={t('users.newPassword')}
-                autoComplete="new-password"
-              />
+            <p className="mt-1 text-sm text-muted-foreground">{t('users.resetPasswordHint')}</p>
+            <div className="mt-3">
               <Button
                 variant="outline"
-                disabled={
-                  !can('identity.user.reset_password') || password.length < 8 || reset.isPending
-                }
-                onClick={() => reset.mutate()}
+                disabled={!can('identity.user.reset_password') || reset.isPending}
+                onClick={() => {
+                  if (!window.confirm(t('users.resetPasswordConfirm', { name: user.username })))
+                    return;
+                  reset.mutate();
+                }}
               >
-                <KeyRound className="mr-2 h-4 w-4" />
-                {t('users.reset')}
+                {reset.isPending ? (
+                  <LoaderCircle className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                ) : (
+                  <KeyRound className="mr-2 h-4 w-4" aria-hidden="true" />
+                )}
+                {t('users.generateTemporaryPassword')}
               </Button>
             </div>
           </div>

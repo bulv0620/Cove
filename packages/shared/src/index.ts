@@ -5,6 +5,7 @@ export interface AuthUser {
   permissions: string[];
   roleCodes: string[];
   isSuperAdmin: boolean;
+  mustChangePassword: boolean;
 }
 
 export interface LoginRequest {
@@ -120,8 +121,12 @@ export interface ManagedUser {
 export interface CreateUserRequest {
   username: string;
   displayName?: string;
-  password: string;
   roleIds: string[];
+}
+
+export interface CreateUserResponse {
+  user: ManagedUser;
+  temporaryPassword: string;
 }
 
 export interface UpdateUserRequest {
@@ -144,8 +149,8 @@ export interface AssignRolesRequest {
   roleIds: string[];
 }
 
-export interface ResetPasswordRequest {
-  password: string;
+export interface ResetPasswordResponse {
+  temporaryPassword: string;
 }
 
 export interface PermissionItem {

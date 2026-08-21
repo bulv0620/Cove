@@ -5,11 +5,12 @@ import type {
   CreateResourceActionRequest,
   CreateRoleRequest,
   CreateUserRequest,
+  CreateUserResponse,
   ManagedRole,
   ManagedUser,
   PermissionItem,
   PermissionSummary,
-  ResetPasswordRequest,
+  ResetPasswordResponse,
   ResourceItem,
   UpdateResourceRequest,
   UpdateResourceActionRequest,
@@ -20,7 +21,7 @@ import { apiRequest } from '@/lib/api';
 
 export const usersApi = {
   list: (): Promise<ManagedUser[]> => apiRequest('/api/users'),
-  create: (input: CreateUserRequest): Promise<ManagedUser> =>
+  create: (input: CreateUserRequest): Promise<CreateUserResponse> =>
     apiRequest('/api/users', { method: 'POST', body: JSON.stringify(input) }),
   updateProfile: (id: string, input: UpdateUserProfileRequest): Promise<ManagedUser> =>
     apiRequest(`/api/users/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
@@ -28,10 +29,9 @@ export const usersApi = {
     apiRequest(`/api/users/${id}/status`, { method: 'PATCH', body: JSON.stringify(input) }),
   assignRoles: (id: string, input: AssignRolesRequest): Promise<ManagedUser> =>
     apiRequest(`/api/users/${id}/roles`, { method: 'PUT', body: JSON.stringify(input) }),
-  resetPassword: (id: string, input: ResetPasswordRequest): Promise<void> =>
+  resetPassword: (id: string): Promise<ResetPasswordResponse> =>
     apiRequest(`/api/users/${id}/reset-password`, {
       method: 'POST',
-      body: JSON.stringify(input),
     }),
   remove: (id: string): Promise<void> => apiRequest(`/api/users/${id}`, { method: 'DELETE' }),
 };

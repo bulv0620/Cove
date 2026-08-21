@@ -10,12 +10,14 @@ import type {
   AuthUser,
   ChangePasswordRequest,
   ChangeUserStatusRequest,
+  CreateUserResponse,
   CreateUserRequest,
   ManagedUser,
-  ResetPasswordRequest,
+  ResetPasswordResponse,
   UpdateUserProfileRequest,
 } from '@home-ops/shared';
 import argon2 from 'argon2';
+import { randomInt } from 'node:crypto';
 import { v7 as uuidv7 } from 'uuid';
 import { PrismaService } from '../../database/prisma.service';
 import { PermissionStatus, RoleStatus, ScopeType, UserStatus } from '../../generated/prisma/enums';
@@ -31,6 +33,30 @@ const passwordHashOptions = {
   timeCost: 2,
   parallelism: 1,
 } as const;
+
+const temporaryPasswordCharacterSets = [
+  'ABCDEFGHJKLMNPQRSTUVWXYZ',
+  'abcdefghijkmnopqrstuvwxyz',
+  '23456789',
+  '!@#$%^&*_-+=',
+] as const;
+const temporaryPasswordLength = 20;
+
+function generateTemporaryPassword(): string {
+  const allCharacters = temporaryPasswordCharacterSets.join('');
+  const characters = temporaryPasswordCharacterSets.map(
+    (characterSet) => characterSet[randomInt(characterSet.length)],
+  );
+
+  while (characters.length < temporaryPasswordLength) {
+    characters.push(allCharacters[randomInt(allCharacters.length)]);
+  }
+  for (let index = characters.length - 1; index > 0; index -= 1) {
+    const swapIndex = randomInt(index + 1);
+    [characters[index], characters[swapIndex]] = [characters[swapIndex], characters[index]];
+  }
+  return characters.join('');
+}
 
 @Injectable()
 export class UsersService {
@@ -63,15 +89,17 @@ export class UsersService {
     return users.map((user) => this.toManagedUser(user));
   }
 
-  async create(input: CreateUserRequest, actor: ActorContext): Promise<ManagedUser> {
+  async create(input: CreateUserRequest, actor: ActorContext): Promise<CreateUserResponse> {
     const roles = await this.ensureAssignableRoles(input.roleIds, actor);
-    const passwordHash = await argon2.hash(input.password, passwordHashOptions);
+    const temporaryPassword = generateTemporaryPassword();
+    const passwordHash = await argon2.hash(temporaryPassword, passwordHashOptions);
     try {
       const user = await this.prisma.user.create({
         data: {
           id: uuidv7(),
           username: input.username.trim(),
           displayName: input.displayName?.trim() || null,
+          mustChangePassword: true,
           passwordCredential: { create: { passwordHash } },
           roleAssignments: {
             create: roles.map(({ id }) => ({
@@ -93,7 +121,7 @@ export class UsersService {
         ipAddress: actor.ipAddress,
         metadata: { username: input.username },
       });
-      return await this.getManagedUser(user.id);
+      return { user: await this.getManagedUser(user.id), temporaryPassword };
     } catch (error: unknown) {
       if (this.isUniqueConstraintError(error))
         throw new ConflictException('Username already exists.');
@@ -195,19 +223,23 @@ export class UsersService {
     return this.getManagedUser(id);
   }
 
-  async resetPassword(id: string, input: ResetPasswordRequest, actor: ActorContext): Promise<void> {
+  async resetPassword(id: string, actor: ActorContext): Promise<ResetPasswordResponse> {
     const user = await this.ensureUserExists(id);
     if (user.isSuperAdmin && !actor.isSuperAdmin) {
       throw new ForbiddenException('Only a super administrator can change this account.');
     }
-    const passwordHash = await argon2.hash(input.password, passwordHashOptions);
+    const temporaryPassword = generateTemporaryPassword();
+    const passwordHash = await argon2.hash(temporaryPassword, passwordHashOptions);
     await this.prisma.$transaction([
       this.prisma.passwordCredential.upsert({
         where: { userId: id },
         update: { passwordHash, passwordChangedAt: new Date() },
         create: { userId: id, passwordHash },
       }),
-      this.prisma.user.update({ where: { id }, data: { authVersion: { increment: 1 } } }),
+      this.prisma.user.update({
+        where: { id },
+        data: { authVersion: { increment: 1 }, mustChangePassword: true },
+      }),
     ]);
     await this.audit.record({
       actorUserId: actor.id,
@@ -216,6 +248,7 @@ export class UsersService {
       targetId: id,
       ipAddress: actor.ipAddress,
     });
+    return { temporaryPassword };
   }
 
   async changeOwnPassword(
@@ -251,7 +284,10 @@ export class UsersService {
         where: { userId: id },
         data: { passwordHash, passwordChangedAt: new Date() },
       }),
-      this.prisma.user.update({ where: { id }, data: { authVersion: { increment: 1 } } }),
+      this.prisma.user.update({
+        where: { id },
+        data: { authVersion: { increment: 1 }, mustChangePassword: false },
+      }),
     ]);
     await this.audit.record({
       actorUserId: id,

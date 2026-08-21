@@ -6,7 +6,6 @@ import {
   IsUUID,
   Matches,
   MaxLength,
-  MinLength,
 } from 'class-validator';
 
 export class CreateUserDto {
@@ -18,11 +17,6 @@ export class CreateUserDto {
   @IsString()
   @MaxLength(100)
   displayName?: string;
-
-  @IsString()
-  @MinLength(8)
-  @MaxLength(128)
-  password!: string;
 
   @IsArray()
   @ArrayUnique()

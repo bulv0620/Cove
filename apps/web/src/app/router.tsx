@@ -3,6 +3,7 @@ import { routedNavigationItems } from '@/app/navigation';
 import { LoadingScreen } from '@/components/shared/loading-screen';
 import { useAuth } from '@/features/auth/hooks';
 import { DashboardLayout } from '@/layouts/dashboard-layout';
+import { RequiredPasswordChangePage } from '@/pages/change-password/required-password-change-page';
 import { LoginPage } from '@/pages/login/login-page';
 import { NotFoundPage } from '@/pages/not-found/not-found-page';
 
@@ -13,9 +14,23 @@ function ProtectedRoute(): JSX.Element {
 }
 
 function PublicOnlyRoute(): JSX.Element {
-  const { isAuthenticated, isRestoring } = useAuth();
+  const { user, isAuthenticated, isRestoring } = useAuth();
   if (isRestoring) return <LoadingScreen />;
-  return isAuthenticated ? <Navigate to="/" replace /> : <Outlet />;
+  return isAuthenticated ? (
+    <Navigate to={user?.mustChangePassword ? '/change-password' : '/'} replace />
+  ) : (
+    <Outlet />
+  );
+}
+
+function PasswordReadyRoute(): JSX.Element {
+  const { user } = useAuth();
+  return user?.mustChangePassword ? <Navigate to="/change-password" replace /> : <Outlet />;
+}
+
+function RequiredPasswordChangeRoute(): JSX.Element {
+  const { user } = useAuth();
+  return user?.mustChangePassword ? <Outlet /> : <Navigate to="/" replace />;
 }
 
 function PermissionRoute({ permission }: { permission: string }): JSX.Element {
@@ -33,15 +48,24 @@ export const router = createBrowserRouter([
     element: <ProtectedRoute />,
     children: [
       {
-        element: <DashboardLayout />,
-        children: routedNavigationItems.map((item) =>
-          item.pagePermission
-            ? {
-                element: <PermissionRoute permission={item.pagePermission} />,
-                children: [{ path: item.to, element: item.element }],
-              }
-            : { path: item.to, element: item.element },
-        ),
+        element: <RequiredPasswordChangeRoute />,
+        children: [{ path: '/change-password', element: <RequiredPasswordChangePage /> }],
+      },
+      {
+        element: <PasswordReadyRoute />,
+        children: [
+          {
+            element: <DashboardLayout />,
+            children: routedNavigationItems.map((item) =>
+              item.pagePermission
+                ? {
+                    element: <PermissionRoute permission={item.pagePermission} />,
+                    children: [{ path: item.to, element: item.element }],
+                  }
+                : { path: item.to, element: item.element },
+            ),
+          },
+        ],
       },
     ],
   },

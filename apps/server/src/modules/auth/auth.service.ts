@@ -75,6 +75,7 @@ export class AuthService {
       permissions: user.permissions,
       roleCodes: user.roleCodes,
       isSuperAdmin: user.isSuperAdmin,
+      mustChangePassword: user.mustChangePassword,
     };
   }
 }

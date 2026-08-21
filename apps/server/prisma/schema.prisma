@@ -53,6 +53,7 @@ model User {
   locale             String?             @db.VarChar(10)
   authVersion        Int                 @default(1) @map("auth_version")
   isSuperAdmin       Boolean             @default(false) @map("is_super_admin")
+  mustChangePassword Boolean             @default(false) @map("must_change_password")
   lastLoginAt        DateTime?           @map("last_login_at") @db.DateTime(3)
   createdAt          DateTime            @default(now()) @map("created_at") @db.DateTime(3)
   updatedAt          DateTime            @updatedAt @map("updated_at") @db.DateTime(3)

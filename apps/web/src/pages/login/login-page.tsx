@@ -11,7 +11,7 @@ import { ApiError } from '@/lib/api';
 
 export function LoginPage(): JSX.Element {
   const { t } = useTranslation();
-  const { login, isAuthenticated } = useAuth();
+  const { user, login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -21,7 +21,8 @@ export function LoginPage(): JSX.Element {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (isAuthenticated) return <Navigate to="/" replace />;
+  if (isAuthenticated)
+    return <Navigate to={user?.mustChangePassword ? '/change-password' : '/'} replace />;
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();

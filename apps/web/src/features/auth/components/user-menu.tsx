@@ -130,11 +130,13 @@ export function UserMenu(): JSX.Element {
   );
 }
 
-function ChangePasswordForm({
+export function ChangePasswordForm({
   onCancel,
+  cancelLabel,
   onSuccess,
 }: {
-  onCancel: () => void;
+  onCancel?: () => void;
+  cancelLabel?: string;
   onSuccess: () => void;
 }): JSX.Element {
   const { t } = useTranslation();
@@ -236,9 +238,11 @@ function ChangePasswordForm({
       )}
 
       <div className="flex justify-end gap-2 border-t pt-5">
-        <Button type="button" variant="ghost" disabled={pending} onClick={onCancel}>
-          {t('common.cancel')}
-        </Button>
+        {onCancel && (
+          <Button type="button" variant="ghost" disabled={pending} onClick={onCancel}>
+            {cancelLabel ?? t('common.cancel')}
+          </Button>
+        )}
         <Button
           type="submit"
           disabled={
