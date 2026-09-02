@@ -56,7 +56,7 @@ pnpm dev
 - Web: http://localhost:5173
 - Server: http://localhost:3000
 
-Vite 默认将 `/api` 代理到 NestJS。Server 通过 `apps/server/.env` 中的 `DATABASE_URL` 和 Prisma 7 的 `@prisma/adapter-mariadb` 连接 MySQL。
+Vite 默认将 `/api` 代理到 NestJS。Server 只读取 `apps/server/.env`，并通过其中的 `DATABASE_URL` 和 Prisma 7 的 `@prisma/adapter-mariadb` 连接 MySQL。
 
 ## 数据库
 
@@ -93,4 +93,6 @@ password: admin123
 
 ## 环境变量
 
-复制 `apps/server/.env.example` 为 `apps/server/.env` 并配置 `DATABASE_URL` 与 `JWT_SECRET`。生产模式必须显式提供强随机密钥。
+复制 `apps/server/.env.example` 为 `apps/server/.env`，并配置 `DATABASE_URL` 与 `JWT_SECRET`。Prisma、数据库 seed、管理员初始化和 NestJS Server 共用该文件；生产模式必须显式提供强随机密钥。
+
+Web 默认通过 Vite 的 `/api` 代理访问 Server，无需额外配置。需要指定独立 API 地址时，在 `apps/web/.env` 中配置 `VITE_API_URL`。不要把 `JWT_SECRET`、数据库密码等 Server secret 放入 Web 环境变量。

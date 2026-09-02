@@ -7,7 +7,7 @@ import { SystemModule } from './modules/system/system.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, envFilePath: ['.env', '../../.env'] }),
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
     DatabaseModule,
     AuditModule,
     AuthModule,

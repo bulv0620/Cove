@@ -55,3 +55,9 @@ React Web ──────────► NestJS Server ───────�
 ## 部署现状
 
 当前仓库尚未提供生产 Docker Compose 文件。根目录 `README.md` 记录的是本地开发启动方式。在生产部署拓扑正式实现前，任何容器、卷、网络或 sidecar 设计都属于 Spec 内容而非当前架构事实。
+
+## 本地配置边界
+
+- NestJS Server、Prisma、数据库 seed 和管理员初始化共用 `apps/server/.env`；仓库根目录不是 dotenv 配置入口。
+- Vite Web 按应用目录读取 `apps/web/.env`。只有 `VITE_*` 变量可进入浏览器构建，Server secret 不得放入 Web 环境变量。
+- 实际 `.env` 文件不得提交；`apps/server/.env.example` 是 Server 环境变量的受跟踪示例。
