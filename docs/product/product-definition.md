@@ -22,7 +22,7 @@ Home Ops 是面向个人 NAS / Home Server 的统一管理面板。当前仓库�
 - Cloudflare 账号接入和 DNS 记录管理。
 - 完整的 Docker 生产部署编排。
 
-这些能力必须通过已批准的 Spec 进入实现。本项目的第一个 Network 方向提案见 [`../specs/2026-08-21-network-control-plane/spec.md`](../specs/2026-08-21-network-control-plane/spec.md)。
+这些能力必须通过已批准的 Spec 进入实现。此前的统一网络控制面提案已废弃，仅作为历史记录保留，见 [`../specs/2026-08-21-network-control-plane/spec.md`](../specs/2026-08-21-network-control-plane/spec.md)。
 
 ## 产品原则
 

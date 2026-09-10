@@ -1,6 +1,6 @@
 # 外部集成与状态
 
-本文规定外部基础设施能力进入 Home Ops 时必须遵守的长期架构边界。具体 FRP、Caddy 和 Cloudflare 设计在批准前仍以对应 Spec 为准。
+本文规定外部基础设施能力进入 Home Ops 时必须遵守的长期架构边界。原 FRP、Caddy 和 Cloudflare 统一网络控制面 Spec 已废弃；未来若重新引入相关能力，必须建立并批准新的 Spec。
 
 ## 三类状态
 

@@ -1,14 +1,16 @@
 ---
 title: Unified Network Control Plane
-status: Draft
+status: Superseded
 owners:
   - maintainer
 created: 2026-08-21
-updated: 2026-08-21
+updated: 2026-09-10
 target_release: TBD
 ---
 
 # 统一网络控制面
+
+> 本 Spec 已于 2026-09-10 废弃。FRP、Caddy 和 Cloudflare 属于低频且相对稳定的外部基础设施，Home Ops 不再计划统一接管其配置、部署与生命周期。本文仅作为历史设计记录保留，不得据此实施。
 
 ## 背景与问题
 
@@ -211,6 +213,7 @@ Docker 栈重启后，数据库、Server、`frpc` 和 Caddy 按健康检查顺�
 
 ## 变更记录
 
-| 日期       | 变更                   | 作者               |
-| ---------- | ---------------------- | ------------------ |
-| 2026-08-21 | 根据产品讨论创建 Draft | Codex / maintainer |
+| 日期       | 变更                                      | 作者               |
+| ---------- | ----------------------------------------- | ------------------ |
+| 2026-08-21 | 根据产品讨论创建 Draft                    | Codex / maintainer |
+| 2026-09-10 | 标记为 Superseded；取消统一网络控制面计划 | maintainer / Codex |
