@@ -38,7 +38,7 @@
 5. 当前任务的 `spec.md`、`design.md` 和 `tasks.md`
 6. [`quality/verification.md`](quality/verification.md)
 
-涉及外部基础设施、密钥或状态协调时，还应阅读 [`architecture/integrations-and-state.md`](architecture/integrations-and-state.md)。准备提交、推送或发布时，阅读 [`operations/release.md`](operations/release.md)。
+准备提交、推送或发布时，阅读 [`operations/release.md`](operations/release.md)。
 
 ## Spec Coding 工作流
 

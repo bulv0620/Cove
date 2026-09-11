@@ -17,12 +17,9 @@ Home Ops 是面向个人 NAS / Home Server 的统一管理面板。当前仓库�
 截至本文更新时，下列能力尚未实现，不能作为现有产品行为依赖：
 
 - NAS 文件、应用、备份和任务的实际管理。
-- FRP 客户端或服务端的部署与生命周期管理。
-- Caddy 配置生成、校验、重载或证书管理。
-- Cloudflare 账号接入和 DNS 记录管理。
 - 完整的 Docker 生产部署编排。
 
-这些能力必须通过已批准的 Spec 进入实现。此前的统一网络控制面提案已废弃，仅作为历史记录保留，见 [`../specs/2026-08-21-network-control-plane/spec.md`](../specs/2026-08-21-network-control-plane/spec.md)。
+这些能力必须通过已批准的 Spec 进入实现。
 
 ## 产品原则
 
@@ -36,5 +33,5 @@ Home Ops 是面向个人 NAS / Home Server 的统一管理面板。当前仓库�
 ## 目标运行环境
 
 - 开发环境：Windows/macOS/Linux 均可运行 Web、Server 与数据库；外部集成允许使用模拟适配器。
-- 生产环境：以 NAS 上的 Docker Compose 部署为目标；公网 FRP 服务端运行在用户控制的公网 Linux 主机上。
+- 生产环境：以 NAS 上的 Docker Compose 部署为目标。
 - 浏览器：现代桌面浏览器为主要管理入口，小屏设备至少支持查看状态和执行常用操作。

@@ -39,7 +39,7 @@ React Web ──────────► NestJS Server ───────�
 
 - Controller 只处理传输协议、鉴权声明和输入转换。
 - Service 负责用例编排与事务边界。
-- 外部命令、SSH、Cloudflare API、文件写入和进程控制必须位于可替换的 adapter 后面。
+- 外部命令、文件写入和进程控制必须位于可替换的 adapter 后面。
 - 定时协调和长时间操作不得阻塞 HTTP 请求；通过持久化 operation/job 状态异步执行。
 - 外部系统的实际状态不能只存在于进程内存中。
 

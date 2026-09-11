@@ -38,7 +38,6 @@ specs/
 
 ## 当前 Specs
 
-| Spec                                                                             | 状态       | 说明                                                   |
-| -------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------ |
-| [`2026-09-02-unify-environment-file`](2026-09-02-unify-environment-file/spec.md) | Completed  | 统一本地 Server 环境变量文件                           |
-| [`2026-08-21-network-control-plane`](2026-08-21-network-control-plane/spec.md)   | Superseded | 已取消：统一管理 FRP、Caddy、Cloudflare DNS 与公网入口 |
+| Spec                                                                             | 状态      | 说明                         |
+| -------------------------------------------------------------------------------- | --------- | ---------------------------- |
+| [`2026-09-02-unify-environment-file`](2026-09-02-unify-environment-file/spec.md) | Completed | 统一本地 Server 环境变量文件 |

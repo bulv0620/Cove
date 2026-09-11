@@ -14,8 +14,8 @@
 
 ```text
 docs: establish spec coding workflow
-feat(network): add public endpoint reconciliation
-fix(network): preserve applied caddy config on reload failure
+feat(users): add user status filtering
+fix(auth): reject expired sessions
 ```
 
 - 不提交 `.env`、Token、密码、私钥、数据库转储或包含 secret 的日志。
@@ -45,7 +45,6 @@ fix(network): preserve applied caddy config on reload failure
 - 固定镜像和二进制版本，不使用 `latest`。
 - 发布前保存上一份已验证配置和版本。
 - 先校验、后原子应用，再执行端到端探测。
-- 控制面升级不得主动中断已运行的数据面。
 - 失败时停止继续扩散变更，执行已定义的补偿/回滚并保留 operation 证据。
 
 ## 发布完成
