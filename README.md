@@ -34,6 +34,8 @@ docs/             后续设计文档入口
 
 ## 安装
 
+Docker 部署见 [`docs/operations/docker.md`](docs/operations/docker.md)，包含配置、首次管理员初始化、持久化、备份和回滚流程。以下为本地开发方式。
+
 项目固定使用 Node.js 22.14.0（Prisma 7 最低要求为 Node.js 20.19 / 22.12 / 24.0）：
 
 ```powershell

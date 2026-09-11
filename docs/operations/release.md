@@ -30,7 +30,7 @@ fix(auth): reject expired sessions
 
 ## 当前发布现状
 
-当前仓库尚未定义自动化 production release、生产 Compose 或版本 tag 流程。增加这些能力必须通过 Spec 或 ADR，不能在本文中假设它们已经存在。
+仓库提供 Compose 配置和手动部署、备份、回滚流程，见 [`docker.md`](docker.md)。Docker 部署 Spec 已按维护者要求归档，完整容器验收尚未完成，见[验收记录](../specs/archive/2026-09-11-docker-deployment/tasks.md)。自动化 production release 与 Git 版本 tag 发布流程尚未定义。
 
 ## 包含数据库迁移的发布
 

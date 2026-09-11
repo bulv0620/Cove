@@ -10,6 +10,7 @@ specs/
     spec.md       目标、范围、需求与验收条件
     design.md     架构、数据、接口、安全和迁移设计
     tasks.md      可验证的实施任务与进度
+  archive/        已按维护者要求归档的 Spec，保留实际验收状态
   _template/      新 Spec 模板
 ```
 
@@ -41,3 +42,7 @@ specs/
 | Spec                                                                             | 状态      | 说明                         |
 | -------------------------------------------------------------------------------- | --------- | ---------------------------- |
 | [`2026-09-02-unify-environment-file`](2026-09-02-unify-environment-file/spec.md) | Completed | 统一本地 Server 环境变量文件 |
+
+## 归档 Specs
+
+- [`2026-09-11-docker-deployment`](archive/2026-09-11-docker-deployment/spec.md)：维护者确认通过并于 2026-09-11 要求归档。配置已交付，完整容器验收受网络阻塞；保留 `In Progress` 状态及待验证记录。

@@ -54,10 +54,11 @@ React Web ──────────► NestJS Server ───────�
 
 ## 部署现状
 
-当前仓库尚未提供生产 Docker Compose 文件。根目录 `README.md` 记录的是本地开发启动方式。在生产部署拓扑正式实现前，任何容器、卷、网络或 sidecar 设计都属于 Spec 内容而非当前架构事实。
+仓库提供根目录 `compose.yaml` 和 Web/Server Dockerfile：Web 静态服务器代理 `/api` 到 NestJS，MySQL 使用命名卷。数据库健康后，一次性迁移与 seed 服务成功退出，才启动 API 和 Web；管理员单独初始化。默认只发布 Web 的宿主机 8080 端口。操作见 [`../operations/docker.md`](../operations/docker.md)。容器端到端验收尚未完成，证据与待验证项见[归档 Spec](../specs/archive/2026-09-11-docker-deployment/tasks.md)。
 
 ## 本地配置边界
 
 - NestJS Server、Prisma、数据库 seed 和管理员初始化共用 `apps/server/.env`；仓库根目录不是 dotenv 配置入口。
 - Vite Web 按应用目录读取 `apps/web/.env`。只有 `VITE_*` 变量可进入浏览器构建，Server secret 不得放入 Web 环境变量。
 - 实际 `.env` 文件不得提交；`apps/server/.env.example` 是 Server 环境变量的受跟踪示例。
+- Compose 显式使用 `--env-file apps/server/.env` 读取部署变量，并按服务注入环境变量；镜像不包含实际 dotenv 文件。Docker 数据库地址为 `mysql:3306`，不同于本地开发地址。
