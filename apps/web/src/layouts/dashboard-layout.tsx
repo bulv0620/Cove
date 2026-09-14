@@ -97,6 +97,7 @@ export function DashboardLayout(): JSX.Element {
   const currentPageKey =
     routedNavigationItems.find(({ to }) => to === location.pathname)?.translationKey ??
     'navigation.dashboard';
+  const isFilesPage = location.pathname === '/files';
 
   return (
     <div className="min-h-dvh bg-background">
@@ -167,7 +168,12 @@ export function DashboardLayout(): JSX.Element {
         <main
           id="main-content"
           tabIndex={-1}
-          className="mx-auto w-full max-w-[1440px] px-4 py-6 outline-none sm:px-6 sm:py-8 lg:px-8"
+          className={cn(
+            'w-full outline-none',
+            isFilesPage
+              ? 'h-[calc(100dvh-4rem)] max-w-none overflow-hidden'
+              : 'mx-auto max-w-[1440px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8',
+          )}
         >
           <Outlet />
         </main>

@@ -1,3 +1,4 @@
+import { FilesModule } from './modules/files/files.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
@@ -12,6 +13,7 @@ import { SystemModule } from './modules/system/system.module';
     AuditModule,
     AuthModule,
     SystemModule,
+    FilesModule,
   ],
 })
 export class AppModule {}

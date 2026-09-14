@@ -107,6 +107,7 @@ export interface UpdateResourceActionRequest {
 }
 
 export interface ManagedUser {
+  smbBound?: boolean;
   id: string;
   username: string;
   displayName: string | null;
@@ -189,4 +190,56 @@ export interface UpdateRoleRequest {
   description?: string | null;
   status?: RoleStatus;
   permissionIds?: string[];
+}
+
+export interface FileEntry {
+  name: string;
+  relativePath: string;
+  type: 'directory' | 'file';
+  sizeBytes: string;
+  modifiedAt: string;
+  hidden: boolean;
+  supported: boolean;
+  objectId?: string | null;
+}
+export interface SmbBindingSummary {
+  enabled: boolean;
+  bound: boolean;
+  username: string | null;
+  version: string | null;
+  state: string;
+  lastCheckedAt: string | null;
+  share: string;
+  domain: string;
+}
+export interface FilesStatus extends SmbBindingSummary {
+  capabilities: {
+    upload: boolean;
+    download: boolean;
+    mkdir: boolean;
+    rename: boolean;
+    delete: boolean;
+  };
+  maxUploadBytes: string;
+  maxActive: number;
+}
+export interface FileEntriesResponse {
+  path: string;
+  entries: FileEntry[];
+  nextCursor: string | null;
+  snapshotId: string;
+  total: number;
+}
+export interface FileOperationSummary {
+  id: string;
+  relativePath: string;
+  expectedBytes: string;
+  transferredBytes: string;
+  state: string;
+  errorCode: string | null;
+  createdAt: string;
+}
+export interface FileDeleteResponse {
+  deleted: string[];
+  failed: Array<{ path: string; code: string }>;
 }

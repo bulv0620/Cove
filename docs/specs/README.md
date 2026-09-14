@@ -46,3 +46,4 @@ specs/
 ## 归档 Specs
 
 - [`2026-09-11-docker-deployment`](archive/2026-09-11-docker-deployment/spec.md)：维护者确认通过并于 2026-09-11 要求归档。配置已交付，完整容器验收受网络阻塞；保留 `In Progress` 状态及待验证记录。
+- [`2026-09-13-smb-files`](archive/2026-09-13-smb-files/spec.md)：维护者确认当前内容验收通过并于 2026-09-14 要求归档。SMB 个人目录、用户绑定与 Files 资源管理器已交付；Docker 完整运行验收按维护者要求延期。

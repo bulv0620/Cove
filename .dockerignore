@@ -18,3 +18,7 @@
 **/.DS_Store
 apps/server/src/generated
 docs
+**/.venv
+**/__pycache__
+# Prisma migrations are executable schema history, not database dumps.
+!apps/server/prisma/migrations/**/*.sql

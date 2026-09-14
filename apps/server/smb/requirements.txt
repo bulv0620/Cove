@@ -1,0 +1,5 @@
+smbprotocol==1.16.1
+cryptography==50.0.1
+pyspnego==0.12.2
+cffi==2.1.1
+pycparser==3.0

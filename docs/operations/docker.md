@@ -104,3 +104,7 @@ dc up -d --no-build --pull never --wait
 回滚前确保旧镜像仍存在；不要重新构建覆盖旧标签。更换应用镜像不会撤销数据库迁移。若 schema 不兼容，应按上面的隔离恢复方式还原更新前备份，并接受备份之后写入的数据需要另行处理。
 
 Compose 启动依赖语义参考 [Docker 官方文档](https://docs.docker.com/compose/how-tos/startup-order/)。
+
+## 可选 Files 集成
+
+SMB 连接、Python 依赖、上传代理和密钥轮换说明见 [Files 配置](files.md)。Compose 仅向 server 注入相关密钥；Docker Files 完整运行验收本轮按维护者要求跳过。

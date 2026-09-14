@@ -13,3 +13,6 @@ Thumbs.db
 .claude/
 coverage/
 apps/server/src/generated/prisma/
+
+.venv/
+__pycache__/

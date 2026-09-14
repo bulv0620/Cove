@@ -1,3 +1,4 @@
+import { filesEn, filesZh } from '@/features/files/messages';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
@@ -6,6 +7,7 @@ const LANGUAGE_KEY = 'home-ops.language';
 const resources = {
   en: {
     translation: {
+      files: filesEn,
       common: {
         productSubtitle: 'Server Console',
         soon: 'Soon',
@@ -296,6 +298,7 @@ const resources = {
   },
   'zh-CN': {
     translation: {
+      files: filesZh,
       common: {
         productSubtitle: '服务器控制台',
         soon: '规划中',

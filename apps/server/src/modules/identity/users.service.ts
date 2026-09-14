@@ -86,7 +86,12 @@ export class UsersService {
       },
       orderBy: [{ isSuperAdmin: 'desc' }, { status: 'asc' }, { username: 'asc' }],
     });
-    return users.map((user) => this.toManagedUser(user));
+    const bindings = new Set(
+      (await this.prisma.smbBinding.findMany({ select: { userId: true } })).map(
+        (item) => item.userId,
+      ),
+    );
+    return users.map((user) => ({ ...this.toManagedUser(user), smbBound: bindings.has(user.id) }));
   }
 
   async create(input: CreateUserRequest, actor: ActorContext): Promise<CreateUserResponse> {

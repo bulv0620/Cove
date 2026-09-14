@@ -35,6 +35,8 @@ React Web ──────────► NestJS Server ───────�
 
 当前 Server 是模块化单体。每个业务模块应拥有自己的 controller、service、DTO 和领域适配器，并通过 NestJS 模块显式依赖其他能力。
 
+FilesModule 已通过独立 Python SMB 协议进程连接 NAS。凭据采用 AES-256-GCM 加密保存，文件字节通过管道流式传输；MySQL 保存绑定、上传状态和一次性下载票据。NAS 文件与 ACL 为文件事实源，默认单 Server 实例。详见 [Files 行为](../behavior/files.md) 与 [运行配置](../operations/files.md)。
+
 新增基础设施模块时遵循：
 
 - Controller 只处理传输协议、鉴权声明和输入转换。

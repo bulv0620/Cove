@@ -41,6 +41,8 @@ export function AuthProvider({ children }: PropsWithChildren): JSX.Element {
 
   const logout = (): void => {
     tokenStorage.clear();
+    queryClient.removeQueries({ queryKey: ['files'] });
+    queryClient.removeQueries({ queryKey: ['smb-binding'] });
     queryClient.removeQueries({ queryKey: CURRENT_USER_KEY });
   };
 

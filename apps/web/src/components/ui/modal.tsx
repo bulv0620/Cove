@@ -36,6 +36,31 @@ export function Modal({
     window.requestAnimationFrame(() => panelRef.current?.focus());
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') closeRef.current();
+      if (event.key === 'Tab') {
+        const panel = panelRef.current;
+        const focusable = panel
+          ? Array.from(
+              panel.querySelectorAll<HTMLElement>(
+                'button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex="0"]',
+              ),
+            ).filter((element) => element.getClientRects().length > 0)
+          : [];
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (!first) {
+          event.preventDefault();
+          panel?.focus();
+        } else if (
+          event.shiftKey &&
+          (document.activeElement === first || document.activeElement === panel)
+        ) {
+          event.preventDefault();
+          last?.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
     };
     document.addEventListener('keydown', onKeyDown);
     return () => {

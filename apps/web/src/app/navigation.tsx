@@ -1,3 +1,4 @@
+import { FilesPage } from '@/pages/files/files-page';
 import {
   Boxes,
   CloudCog,
@@ -71,7 +72,13 @@ export const navigationGroups: NavigationGroup[] = [
   {
     translationKey: 'navigation.infrastructure',
     items: [
-      { translationKey: 'navigation.files', icon: FileStack },
+      {
+        translationKey: 'navigation.files',
+        icon: FileStack,
+        to: '/files',
+        pagePermission: 'infra.files.page',
+        element: <FilesPage />,
+      },
       { translationKey: 'navigation.applications', icon: Boxes },
       { translationKey: 'navigation.network', icon: Network },
       { translationKey: 'navigation.backup', icon: HardDriveDownload },

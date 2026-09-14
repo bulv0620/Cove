@@ -57,6 +57,9 @@ model User {
   lastLoginAt        DateTime?           @map("last_login_at") @db.DateTime(3)
   createdAt          DateTime            @default(now()) @map("created_at") @db.DateTime(3)
   updatedAt          DateTime            @updatedAt @map("updated_at") @db.DateTime(3)
+  smbBinding         SmbBinding?
+  fileOperations     FileOperation[]
+  downloadTickets    DownloadTicket[]
   passwordCredential PasswordCredential?
   roleAssignments    RoleAssignment[]
 
@@ -173,4 +176,63 @@ model PasswordCredential {
   user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("password_credentials")
+}
+
+model SmbBinding {
+  userId            String   @id @map("user_id") @db.Char(36)
+  username          String   @db.VarChar(256)
+  ciphertext        String   @db.Text
+  nonce             String   @db.VarChar(32)
+  authTag           String   @map("auth_tag") @db.VarChar(32)
+  keyId             String   @map("key_id") @db.VarChar(32)
+  version           String   @db.Char(36)
+  configFingerprint String   @map("config_fingerprint") @db.Char(64)
+  lastCheckedAt     DateTime @map("last_checked_at") @db.DateTime(3)
+  lastCheckCode     String   @map("last_check_code") @db.VarChar(64)
+  createdAt         DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("smb_bindings")
+}
+
+model FileOperation {
+  id                String   @id @db.Char(36)
+  userId            String   @map("user_id") @db.Char(36)
+  bindingVersion    String   @map("binding_version") @db.Char(36)
+  configFingerprint String   @map("config_fingerprint") @db.Char(64)
+  authVersion       Int      @map("auth_version")
+  requestId         String   @map("request_id") @db.Char(36)
+  relativePath      String   @map("relative_path") @db.Text
+  tempPath          String   @map("temp_path") @db.Text
+  objectId          String?  @map("object_id") @db.VarChar(64)
+  expectedBytes     BigInt   @map("expected_bytes")
+  transferredBytes  BigInt   @default(0) @map("transferred_bytes")
+  state             String   @db.VarChar(32)
+  errorCode         String?  @map("error_code") @db.VarChar(64)
+  cleanupPending    Boolean  @default(false) @map("cleanup_pending")
+  leaseExpiresAt    DateTime @map("lease_expires_at") @db.DateTime(3)
+  createdAt         DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bindingVersion, requestId])
+  @@index([state, leaseExpiresAt])
+  @@map("file_operations")
+}
+
+model DownloadTicket {
+  id                String    @id @db.Char(36)
+  secretHash        String    @map("secret_hash") @db.Char(64)
+  userId            String    @map("user_id") @db.Char(36)
+  authVersion       Int       @map("auth_version")
+  bindingVersion    String    @map("binding_version") @db.Char(36)
+  configFingerprint String    @map("config_fingerprint") @db.Char(64)
+  relativePath      String    @map("relative_path") @db.Text
+  expiresAt         DateTime  @map("expires_at") @db.DateTime(3)
+  consumedAt        DateTime? @map("consumed_at") @db.DateTime(3)
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@map("download_tickets")
 }

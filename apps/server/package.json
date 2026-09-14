@@ -15,7 +15,8 @@
     "db:bootstrap-admin": "tsx prisma/bootstrap-admin.ts",
     "lint": "eslint src --ext .ts --max-warnings 0",
     "pretypecheck": "prisma generate",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "pnpm build && node --test test/*.test.cjs"
   },
   "dependencies": {
     "@home-ops/shared": "workspace:*",

@@ -19,6 +19,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Modal } from '@/components/ui/modal';
 import { useAuth } from '@/features/auth/hooks';
+import { SmbBindingPanel } from '@/features/files/smb-binding-panel';
 import { rolesApi, usersApi } from '@/features/identity/api';
 import type { ManagedUser } from '@/features/identity/types';
 import { ApiError } from '@/lib/api';
@@ -45,6 +46,7 @@ export function UsersPage(): JSX.Element {
   const [search, setSearch] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [smbSelectedId, setSmbSelectedId] = useState<string | null>(null);
   const [temporaryCredential, setTemporaryCredential] = useState<{
     username: string;
     password: string;
@@ -64,6 +66,7 @@ export function UsersPage(): JSX.Element {
     );
   }, [search, users.data]);
   const selected = users.data?.find(({ id }) => id === selectedId) ?? null;
+  const smbSelected = users.data?.find(({ id }) => id === smbSelectedId) ?? null;
 
   return (
     <div className="space-y-6">
@@ -141,6 +144,7 @@ export function UsersPage(): JSX.Element {
                   <th className="px-4 py-3 font-medium">{t('users.user')}</th>
                   <th className="px-4 py-3 font-medium">{t('users.roles')}</th>
                   <th className="px-4 py-3 font-medium">{t('users.status')}</th>
+                  <th className="px-4 py-3 font-medium">{t('files.bindTitle')}</th>
                   <th className="px-4 py-3 font-medium">{t('users.lastLogin')}</th>
                   <th className="px-4 py-3 text-right font-medium">{t('common.actions')}</th>
                 </tr>
@@ -151,7 +155,7 @@ export function UsersPage(): JSX.Element {
                     key={item.id}
                     className={cn(
                       'transition-colors hover:bg-muted/40',
-                      selectedId === item.id && 'bg-accent/60',
+                      (selectedId === item.id || smbSelectedId === item.id) && 'bg-accent/60',
                     )}
                   >
                     <td className="px-4 py-4">
@@ -187,6 +191,9 @@ export function UsersPage(): JSX.Element {
                     <td className="px-4 py-4">
                       <StatusBadge active={item.status === 'ACTIVE'} />
                     </td>
+                    <td className="px-4 py-4 text-xs">
+                      {t(item.smbBound ? 'files.bound' : 'files.unbound')}
+                    </td>
                     <td className="px-4 py-4 text-muted-foreground">
                       {item.lastLoginAt
                         ? new Intl.DateTimeFormat(i18n.language, {
@@ -196,14 +203,32 @@ export function UsersPage(): JSX.Element {
                         : t('users.never')}
                     </td>
                     <td className="px-4 py-4 text-right">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setSelectedId(selectedId === item.id ? null : item.id)}
-                      >
-                        <UserCog className="mr-2 h-4 w-4" />
-                        {t('common.manage')}
-                      </Button>
+                      <div className="flex flex-wrap justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSmbSelectedId(null);
+                            setSelectedId(item.id);
+                          }}
+                        >
+                          <UserCog className="mr-2 h-4 w-4" aria-hidden="true" />
+                          {t('common.manage')}
+                        </Button>
+                        {can('identity.user.bind_smb') && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedId(null);
+                              setSmbSelectedId(item.id);
+                            }}
+                          >
+                            <KeyRound className="mr-2 h-4 w-4" aria-hidden="true" />
+                            {t('files.bindTitle')}
+                          </Button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -236,6 +261,22 @@ export function UsersPage(): JSX.Element {
               setSelectedId(null);
               setTemporaryCredential({ username: selected.username, password });
             }}
+          />
+        </Modal>
+      )}
+
+      {smbSelected && can('identity.user.bind_smb') && (
+        <Modal
+          open
+          title={t('files.bindTitle')}
+          description={smbSelected.username}
+          onClose={() => setSmbSelectedId(null)}
+          className="sm:max-w-lg"
+        >
+          <SmbBindingPanel
+            key={smbSelected.id}
+            userId={smbSelected.id}
+            onChanged={() => queryClient.invalidateQueries({ queryKey: usersKey })}
           />
         </Modal>
       )}
