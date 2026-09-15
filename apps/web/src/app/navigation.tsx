@@ -1,13 +1,8 @@
 import { FilesPage } from '@/pages/files/files-page';
 import {
-  Boxes,
-  CloudCog,
   FileStack,
-  HardDriveDownload,
   LayoutDashboard,
   Layers,
-  Network,
-  Settings,
   ShieldCheck,
   Users,
   type LucideIcon,
@@ -21,9 +16,9 @@ import { UsersPage } from '@/pages/users/users-page';
 export interface NavigationItem {
   translationKey: string;
   icon: LucideIcon;
-  to?: string;
+  to: string;
   pagePermission?: string;
-  element?: ReactNode;
+  element: ReactNode;
 }
 
 export interface NavigationGroup {
@@ -79,20 +74,8 @@ export const navigationGroups: NavigationGroup[] = [
         pagePermission: 'infra.files.page',
         element: <FilesPage />,
       },
-      { translationKey: 'navigation.applications', icon: Boxes },
-      { translationKey: 'navigation.network', icon: Network },
-      { translationKey: 'navigation.backup', icon: HardDriveDownload },
-      { translationKey: 'navigation.tasks', icon: CloudCog },
     ],
-  },
-  {
-    translationKey: 'navigation.system',
-    items: [{ translationKey: 'navigation.settings', icon: Settings }],
   },
 ];
 
-export const routedNavigationItems = navigationGroups.flatMap(({ items }) =>
-  items.filter((item): item is NavigationItem & { to: string; element: ReactNode } =>
-    Boolean(item.to && item.element),
-  ),
-);
+export const routedNavigationItems = navigationGroups.flatMap(({ items }) => items);

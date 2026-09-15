@@ -37,22 +37,6 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }): JSX.Elemen
               <div className="space-y-1">
                 {visibleItems.map((item) => {
                   const Icon = item.icon;
-                  if (!item.to) {
-                    return (
-                      <button
-                        key={item.translationKey}
-                        type="button"
-                        disabled
-                        className="flex h-10 w-full items-center gap-3 rounded-md px-3 text-sm text-muted-foreground/70 disabled:cursor-not-allowed"
-                      >
-                        <Icon className="h-4 w-4" aria-hidden="true" />
-                        <span>{t(item.translationKey)}</span>
-                        <span className="ml-auto text-[10px] uppercase tracking-wide">
-                          {t('common.soon')}
-                        </span>
-                      </button>
-                    );
-                  }
                   return (
                     <NavLink
                       key={item.translationKey}
