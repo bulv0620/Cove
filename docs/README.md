@@ -40,6 +40,8 @@
 
 准备提交、推送或发布时，阅读 [`operations/release.md`](operations/release.md)。
 
+需要将本地镜像手动传输到威联通 NAS 时，阅读 [`operations/nas-manual-deployment.md`](operations/nas-manual-deployment.md)。
+
 ## Spec Coding 工作流
 
 1. **建立事实**：先阅读长期文档与相关代码，区分当前行为和计划能力。

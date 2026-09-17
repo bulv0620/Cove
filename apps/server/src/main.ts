@@ -6,9 +6,11 @@ import type { Server } from 'node:http';
 import { FilesConfig } from './modules/files/files-config';
 import { filesEvents } from './modules/files/files-events';
 import { AppModule } from './app.module';
+import { configureStaticAssets } from './static-assets';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const config = app.get(ConfigService);
 
   // Transfers are bounded by byte limits and inactivity, not a fixed total duration.
@@ -36,6 +38,7 @@ async function bootstrap(): Promise<void> {
       transform: true,
     }),
   );
+  configureStaticAssets(app, config.get<string>('WEB_STATIC_ROOT'));
 
   const port = config.get<number>('PORT', 3000);
   await app.listen(port);

@@ -47,19 +47,19 @@ SMB_ENCRYPTION_REQUIRED=false
 
 ## 浏览器与代理
 
-生产 Web 必须通过 HTTPS 访问，以使用 Secure 下载 cookie。只在本机 loopback HTTP 开发时设置 `FILES_ALLOW_INSECURE_LOCAL_COOKIE=true`；生产模式始终强制 Secure，不受此变量覆盖。Web 与 API 建议同源，Vite 已代理 `/api`。
+生产应用必须通过 HTTPS 访问，以使用 Secure 下载 cookie。只在本机 loopback HTTP 开发时设置 `FILES_ALLOW_INSECURE_LOCAL_COOKIE=true`；生产模式始终强制 Secure，不受此变量覆盖。生产镜像由 NestJS 同源提供 Web 与 API；本地开发由 Vite 代理 `/api`。
 
-上传代理关闭请求缓冲，下载关闭响应缓冲；Nginx 的请求大小上限交给 Server 实际字节计数执行。配置读写空闲超时 120 秒，Server SMB 空闲超时默认 60 秒；持续有数据的大文件不会因为固定总时长被截断。
+生产应用直接把浏览器文件流交给 Server，不经过镜像内反向代理。Server 以实际字节计数执行大小限制，并关闭请求总时长限制；HTTP 读写空闲超时至少 120 秒，SMB 空闲超时默认 60 秒。持续有数据的大文件不会因固定总时长被截断。外部 HTTPS 反向代理也必须关闭上传与下载缓冲，并允许所需请求大小和持续时间。
 
 默认使用单个 Server 实例；跨实例并发配额和事件广播尚未实现，不能直接通过水平扩容宣称维持相同的全局配额。
 
 ## Docker
 
-Server 镜像已包含 `/opt/smb` Python 依赖；无需宿主机 CIFS 挂载、特权容器或 SMB 入站端口。Server 必须能够出站访问 NAS TCP 445，容器中的 localhost 不是 NAS。
+Home Ops 应用镜像已包含 `/opt/smb` Python 依赖；无需宿主机 CIFS 挂载、特权容器或 SMB 入站端口。Server 必须能够出站访问 NAS TCP 445，容器中的 localhost 不是 NAS。
 
-Compose 从既有 `apps/server/.env` 显式注入 SMB/Files 变量到 server 服务，不向 Web、MySQL、迁移和管理员初始化服务注入 NAS 密钥。修改 env 后需重新创建容器，例如 `docker compose --env-file apps/server/.env up -d --force-recreate server`。
+Compose 从既有 `apps/server/.env` 显式注入 SMB/Files 变量到 server 服务，不向 MySQL、迁移和管理员初始化服务注入 NAS 密钥。修改 env 后需重新创建容器，例如 `docker compose --env-file apps/server/.env up -d --force-recreate server`。
 
-镜像构建排除真实 env、虚拟环境和数据库 dump，但显式保留 Prisma SQL 迁移。Docker 完整运行验收本轮按维护者要求跳过；配置交付不等于生产部署已通过验收。
+镜像构建排除真实 env、虚拟环境和数据库 dump，但显式保留 Prisma SQL 迁移。单应用镜像的本机验证和延期的实际 NAS 验收记录在[归档 Spec](../specs/archive/2026-09-17-single-application-image/tasks.md)；配置交付不等于实际 NAS 路径已经通过验收。
 
 ## 密钥备份与轮换
 

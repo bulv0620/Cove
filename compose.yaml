@@ -1,44 +1,20 @@
 name: home-ops
 
 x-server: &server
-  image: home-ops-server:${HOME_OPS_VERSION:-local}
+  image: home-ops:${HOME_OPS_VERSION:-local}
   build:
     context: .
-    dockerfile: apps/server/Dockerfile
+    dockerfile: Dockerfile
   init: true
   environment: &server-env
     NODE_ENV: production
     DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL for mysql host in apps/server/.env}
 
 services:
-  mysql:
-    image: mysql:8.4.6
-    restart: unless-stopped
-    environment:
-      MYSQL_DATABASE: home_ops
-      MYSQL_USER: home_ops
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in apps/server/.env}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in apps/server/.env}
-    volumes:
-      - mysql-data:/var/lib/mysql
-    healthcheck:
-      test:
-        [
-          CMD-SHELL,
-          'MYSQL_PWD="$${MYSQL_PASSWORD}" mysql -h 127.0.0.1 -u home_ops -D home_ops -e "SELECT 1" >/dev/null 2>&1',
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 12
-      start_period: 30s
-
   migrate:
     <<: *server
     restart: 'no'
     command: [sh, -c, 'pnpm db:migrate:deploy && pnpm db:seed']
-    depends_on:
-      mysql:
-        condition: service_healthy
 
   server:
     <<: *server
@@ -46,6 +22,7 @@ services:
     environment:
       <<: *server-env
       PORT: '3000'
+      WEB_STATIC_ROOT: /app/public
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in apps/server/.env}
       SMB_ENABLED: '${SMB_ENABLED:-false}'
       SMB_HOST: '${SMB_HOST:-}'
@@ -67,35 +44,20 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
+    ports:
+      - '${WEB_PORT:-8080}:3000'
     healthcheck:
       test:
         [
           CMD,
           node,
           -e,
-          "fetch('http://127.0.0.1:3000/api/auth/me').then(r=>process.exit(r.status===401?0:1)).catch(()=>process.exit(1))",
+          "Promise.all([fetch('http://127.0.0.1:3000/'),fetch('http://127.0.0.1:3000/api/auth/me')]).then(([home,api])=>process.exit(home.status===200&&(home.headers.get('content-type')||'').includes('text/html')&&api.status===401?0:1)).catch(()=>process.exit(1))",
         ]
       interval: 10s
       timeout: 5s
       retries: 6
       start_period: 20s
-
-  web:
-    image: home-ops-web:${HOME_OPS_VERSION:-local}
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
-    restart: unless-stopped
-    ports:
-      - '${WEB_PORT:-8080}:80'
-    depends_on:
-      server:
-        condition: service_healthy
-    healthcheck:
-      test: [CMD, wget, -q, --spider, http://127.0.0.1/]
-      interval: 10s
-      timeout: 5s
-      retries: 3
 
   bootstrap-admin:
     <<: *server
@@ -109,6 +71,3 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
-
-volumes:
-  mysql-data:

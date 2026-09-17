@@ -34,7 +34,7 @@ docs/             后续设计文档入口
 
 ## 安装
 
-Docker 部署见 [`docs/operations/docker.md`](docs/operations/docker.md)，包含配置、首次管理员初始化、持久化、备份和回滚流程。以下为本地开发方式。
+Docker 部署见 [`docs/operations/docker.md`](docs/operations/docker.md)；从开发电脑导出镜像并传到威联通的完整流程见 [`docs/operations/nas-manual-deployment.md`](docs/operations/nas-manual-deployment.md)。生产构建使用一个 Home Ops 应用镜像，由 NestJS 同时提供前端页面和 API；Compose 通过环境变量连接外部 MySQL，不管理数据库容器。以下为本地开发方式。
 
 项目固定使用 Node.js 22.14.0（Prisma 7 最低要求为 Node.js 20.19 / 22.12 / 24.0）：
 

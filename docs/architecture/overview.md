@@ -56,11 +56,12 @@ FilesModule 已通过独立 Python SMB 协议进程连接 NAS。凭据采用 AES
 
 ## 部署现状
 
-仓库提供根目录 `compose.yaml` 和 Web/Server Dockerfile：Web 静态服务器代理 `/api` 到 NestJS，MySQL 使用命名卷。数据库健康后，一次性迁移与 seed 服务成功退出，才启动 API 和 Web；管理员单独初始化。默认只发布 Web 的宿主机 8080 端口。操作见 [`../operations/docker.md`](../operations/docker.md)。容器端到端验收尚未完成，证据与待验证项见[归档 Spec](../specs/archive/2026-09-11-docker-deployment/tasks.md)。
+仓库提供根目录 `Dockerfile` 和 `compose.yaml`：多阶段构建将 Web 静态产物、NestJS Server 和 Python SMB 环境放入一个 Home Ops 应用镜像，由 NestJS 在同一端口提供页面与 `/api`。Compose 不创建 MySQL 服务或数据库卷，通过 `DATABASE_URL` 连接维护者管理的外部 MySQL。一次性迁移与 seed 服务成功退出后才启动应用；管理员单独初始化。默认只发布应用的宿主机 8080 端口。操作见 [`../operations/docker.md`](../operations/docker.md)。本机 clean-room 已通过；实际 NAS 与旧部署现场验证由维护者延期，证据见[归档 Spec](../specs/archive/2026-09-17-single-application-image/tasks.md)。
 
 ## 本地配置边界
 
 - NestJS Server、Prisma、数据库 seed 和管理员初始化共用 `apps/server/.env`；仓库根目录不是 dotenv 配置入口。
 - Vite Web 按应用目录读取 `apps/web/.env`。只有 `VITE_*` 变量可进入浏览器构建，Server secret 不得放入 Web 环境变量。
 - 实际 `.env` 文件不得提交；`apps/server/.env.example` 是 Server 环境变量的受跟踪示例。
-- Compose 显式使用 `--env-file apps/server/.env` 读取部署变量，并按服务注入环境变量；镜像不包含实际 dotenv 文件。Docker 数据库地址为 `mysql:3306`，不同于本地开发地址。
+- 生产镜像设置 `WEB_STATIC_ROOT=/app/public` 以启用静态页面；本地开发不设置该变量，继续由 Vite 提供 Web。
+- Compose 显式使用 `--env-file apps/server/.env` 读取部署变量，并按服务注入环境变量；镜像不包含实际 dotenv 文件。`DATABASE_URL` 必须使用应用容器可访问的外部数据库地址，容器内的 `127.0.0.1` 不代表 NAS 宿主机。
