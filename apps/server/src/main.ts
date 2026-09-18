@@ -1,4 +1,4 @@
-import { ValidationPipe } from '@nestjs/common';
+import { RequestMethod, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import type { Request, Response, NextFunction } from 'express';
@@ -29,7 +29,9 @@ async function bootstrap(): Promise<void> {
     }
     next();
   });
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api', {
+    exclude: [{ path: 'image/:publicId', method: RequestMethod.GET }],
+  });
   app.enableCors({ origin: true, credentials: false });
   app.useGlobalPipes(
     new ValidationPipe({

@@ -65,6 +65,7 @@ model User {
   smbBinding         SmbBinding?
   fileOperations     FileOperation[]
   downloadTickets    DownloadTicket[]
+  imageAssets        ImageAsset[]
   passwordCredential PasswordCredential?
   roleAssignments    RoleAssignment[]
 
@@ -272,4 +273,60 @@ model DownloadTicket {
 
   @@index([expiresAt])
   @@map("download_tickets")
+}
+
+model ImageAsset {
+  id                String             @id @db.Char(36)
+  userId            String             @map("user_id") @db.Char(36)
+  bindingVersion    String             @map("binding_version") @db.Char(36)
+  configFingerprint String             @map("config_fingerprint") @db.Char(64)
+  requestId         String?            @map("request_id") @db.Char(36)
+  relativePath      String             @map("relative_path") @db.VarChar(512)
+  tempPath          String?            @map("temp_path") @db.VarChar(512)
+  objectId          String?            @map("object_id") @db.VarChar(128)
+  mediaType         String?            @map("media_type") @db.VarChar(64)
+  extension         String?            @db.VarChar(16)
+  sizeBytes         BigInt             @default(0) @map("size_bytes")
+  sha256            String?            @db.Char(64)
+  state             String             @db.VarChar(32)
+  errorCode         String?            @map("error_code") @db.VarChar(64)
+  cleanupPending    Boolean            @default(false) @map("cleanup_pending")
+  publishRequested  Boolean            @default(false) @map("publish_requested")
+  leaseExpiresAt    DateTime?          @map("lease_expires_at") @db.DateTime(3)
+  sourceModifiedAt  DateTime?          @map("source_modified_at") @db.DateTime(3)
+  lastSeenAt        DateTime?          @map("last_seen_at") @db.DateTime(3)
+  createdAt         DateTime           @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt         DateTime           @updatedAt @map("updated_at") @db.DateTime(3)
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  publicGrants      ImagePublicGrant[]
+
+  @@unique([userId, bindingVersion, relativePath], map: "image_assets_binding_path_key")
+  @@unique([userId, bindingVersion, requestId], map: "image_assets_request_key")
+  @@index([userId, bindingVersion, state, updatedAt])
+  @@index([state, leaseExpiresAt])
+  @@map("image_assets")
+}
+
+model ImagePublicGrant {
+  id             String     @id @db.Char(36)
+  assetId        String     @map("asset_id") @db.Char(36)
+  publicId       String     @unique(map: "image_public_grants_public_id_key") @map("public_id") @db.Char(43)
+  bindingVersion String     @map("binding_version") @db.Char(36)
+  revokedAt      DateTime?  @map("revoked_at") @db.DateTime(3)
+  createdAt      DateTime   @default(now()) @map("created_at") @db.DateTime(3)
+  asset          ImageAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([assetId, revokedAt])
+  @@map("image_public_grants")
+}
+
+model ImagePublicRateBucket {
+  bucketKey    String   @map("bucket_key") @db.Char(64)
+  minuteStart  DateTime @map("minute_start") @db.DateTime(0)
+  requestCount Int      @default(0) @map("request_count")
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+
+  @@id([bucketKey, minuteStart])
+  @@index([minuteStart])
+  @@map("image_public_rate_buckets")
 }

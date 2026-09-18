@@ -18,6 +18,8 @@ test('SPA fallback only accepts browser page navigation', () => {
     '/api',
     '/api/auth/me',
     '/api%2Fauth%2Fme',
+    '/image/abcdefghijklmnopqrstuvwxyzABCDEFGH123456789',
+    '/image%2Fsecret',
     '/assets/missing.js',
     '/missing.css',
     '/.env',

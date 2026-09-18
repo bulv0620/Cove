@@ -23,7 +23,8 @@ Browser
   ▼
 React Web ──────────► NestJS Server ──────────► MySQL 8.4
                          │                         ▲
-                         └──── Prisma 7 ──────────┘
+                         ├──── Prisma 7 ──────────┘
+                         └──── Python SMB worker ──► NAS home
 ```
 
 - Web 负责页面路由、交互状态、国际化和权限可见性。
@@ -35,7 +36,9 @@ React Web ──────────► NestJS Server ───────�
 
 当前 Server 是模块化单体。每个业务模块应拥有自己的 controller、service、DTO 和领域适配器，并通过 NestJS 模块显式依赖其他能力。
 
-FilesModule 已通过独立 Python SMB 协议进程连接 NAS。凭据采用 AES-256-GCM 加密保存，文件字节通过管道流式传输；MySQL 保存绑定、上传状态和一次性下载票据。NAS 文件与 ACL 为文件事实源，默认单 Server 实例。详见 [Files 行为](../behavior/files.md) 与 [运行配置](../operations/files.md)。
+FilesModule 已通过独立 Python SMB 协议进程连接 NAS，并向 ImagesModule 导出受控的配置、绑定和 SMB 适配基础。凭据采用 AES-256-GCM 加密保存，文件字节通过管道流式传输；MySQL 保存绑定、恢复状态、一次性下载票据、可重建图片索引和不可复活的公开 grant。NAS 文件与 ACL 为字节事实源，默认单 Server 实例。详见 [Files 行为](../behavior/files.md)、[图床行为](../behavior/images.md)与[运行配置](../operations/files.md)。
+
+ImagesModule 拥有独立 RBAC、图片状态和 `/api/images` 管理 API。匿名 `GET /image/{publicId}` 不经过 SPA fallback 或 JWT，仅在公开 grant、用户、绑定版本、对象身份与文件元数据均有效时流式返回已验证 MIME。单 IP 与全局分钟桶保存在 MySQL，以便跨重启及多 Server 进程共享频率限制。
 
 新增功能模块时遵循：
 

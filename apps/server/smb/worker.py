@@ -1,11 +1,14 @@
 """One isolated SMB session per operation. JSON control over pipes; bytes never staged locally."""
 import datetime
+import hashlib
+import io
 import json
 import logging
 import os
 import re
 import sys
 import uuid
+import warnings
 
 from smbprotocol.connection import Connection, Dialects
 from smbprotocol.session import Session
@@ -22,6 +25,109 @@ logging.disable(logging.CRITICAL)
 
 
 TEMP_PREFIX = '.cove-upload-'
+IMAGE_FORMATS = {
+    'JPEG': ('image/jpeg', 'jpg'), 'PNG': ('image/png', 'png'),
+    'WEBP': ('image/webp', 'webp'), 'GIF': ('image/gif', 'gif'),
+    'AVIF': ('image/avif', 'avif'),
+}
+
+
+class ImageContainerBoundary:
+    """Streaming container-end checks reject bytes hidden after a valid raster image."""
+    def __init__(self):
+        self.total = 0
+        self.head = bytearray()
+        self.tail = bytearray()
+        self.avif_header = bytearray()
+        self.avif_remaining = 0
+        self.avif_boxes = 0
+        self.avif_first_type = None
+        self.avif_valid = True
+
+    def feed(self, data):
+        self.total += len(data)
+        if len(self.head) < 16:
+            self.head.extend(data[:16 - len(self.head)])
+        self.tail.extend(data)
+        if len(self.tail) > 16:
+            del self.tail[:-16]
+        offset = 0
+        while offset < len(data) and self.avif_valid:
+            if self.avif_remaining:
+                consumed = min(self.avif_remaining, len(data) - offset)
+                self.avif_remaining -= consumed
+                offset += consumed
+                continue
+            needed = 8
+            if len(self.avif_header) >= 8 and int.from_bytes(self.avif_header[:4], 'big') == 1:
+                needed = 16
+            consumed = min(needed - len(self.avif_header), len(data) - offset)
+            self.avif_header.extend(data[offset:offset + consumed])
+            offset += consumed
+            if len(self.avif_header) < needed:
+                continue
+            size = int.from_bytes(self.avif_header[:4], 'big')
+            box_type = bytes(self.avif_header[4:8])
+            header_size = needed
+            if size == 1:
+                size = int.from_bytes(self.avif_header[8:16], 'big')
+            if size == 0 or size < header_size:
+                self.avif_valid = False
+                break
+            if self.avif_boxes == 0:
+                self.avif_first_type = box_type
+            self.avif_boxes += 1
+            self.avif_remaining = size - header_size
+            self.avif_header.clear()
+
+    def validate(self, image_format):
+        valid = {
+            'JPEG': bytes(self.tail).endswith(b'\xff\xd9'),
+            'PNG': len(self.tail) >= 12 and bytes(self.tail[-12:-8]) == b'\x00\x00\x00\x00'
+                   and bytes(self.tail[-8:-4]) == b'IEND',
+            'GIF': bytes(self.tail).endswith(b';'),
+            'WEBP': len(self.head) >= 12 and bytes(self.head[:4]) == b'RIFF'
+                    and bytes(self.head[8:12]) == b'WEBP'
+                    and int.from_bytes(self.head[4:8], 'little') + 8 == self.total,
+            'AVIF': self.avif_valid and self.avif_first_type == b'ftyp'
+                    and self.avif_boxes >= 2 and self.avif_remaining == 0
+                    and not self.avif_header,
+        }.get(image_format, False)
+        if not valid:
+            raise ValueError('INVALID_IMAGE')
+
+
+def load_image_support():
+    from PIL import Image, ImageFile
+    try:
+        import pillow_avif  # noqa: F401
+    except ImportError:
+        pass
+    Image.MAX_IMAGE_PIXELS = 25_000_000
+    warnings.simplefilter('error', Image.DecompressionBombWarning)
+    return Image, ImageFile
+
+
+def validate_image_bytes(raw, expected_extension=None):
+    Image, _ = load_image_support()
+    try:
+        with Image.open(io.BytesIO(raw)) as image:
+            image.verify()
+            media = IMAGE_FORMATS.get(image.format)
+            image_format = image.format
+        if not media:
+            raise ValueError('UNSUPPORTED_IMAGE')
+        if expected_extension and expected_extension != media[1]:
+            if not (expected_extension == 'jpeg' and media[1] == 'jpg'):
+                raise ValueError('INVALID_IMAGE')
+        boundary = ImageContainerBoundary()
+        boundary.feed(raw)
+        boundary.validate(image_format)
+        return media
+    except ValueError:
+        raise
+    except Exception as exc:
+        raise ValueError('INVALID_IMAGE') from exc
 
 
 def is_temporary_name(name):
@@ -148,11 +254,16 @@ def run(config):
                         path_parts(name)
                     except ValueError:
                         supported = False
+                    try:
+                        object_id = str(entry['file_id'].get_value())
+                    except Exception:
+                        object_id = None
                     entries.append(dict(name=name, relativePath='/'.join(filter(None, [path, name])),
                                         type='directory' if attrs & 0x10 else 'file',
                                         sizeBytes=str(entry['end_of_file'].get_value()),
                                         modifiedAt=entry['last_write_time'].get_value().isoformat(),
-                                        hidden=bool(attrs & 2) or name.startswith('.'), supported=supported))
+                                        hidden=bool(attrs & 2) or name.startswith('.'), supported=supported,
+                                        objectId=object_id))
             if action == 'test':
                 emit(result=dict(connected=True, dialect=hex(client.connection.dialect),
                                  encrypted=bool(client.session.encrypt_data)))
@@ -178,16 +289,91 @@ def run(config):
             result = metadata(handle, target, identity)
             handle.close()
             emit(result=result)
-        elif action == 'delete':
+        elif action in ('delete', 'delete_object'):
             parts = path_parts(path)
             if not parts or is_temporary_name(parts[-1]):
                 raise ValueError('INVALID_PATH')
             handle = client.open(path, delete=True)
+            if action == 'delete_object' and client.identity(handle) != config['objectId']:
+                raise ValueError('OBJECT_CHANGED')
             info = FileDispositionInformation()
             info['delete_pending'] = True
             client.set_info(handle, info)
             handle.close()
             emit(result=True)
+        elif action in ('inspect', 'thumbnail'):
+            Image, ImageFile = load_image_support()
+            source = client.open(path, directory=False)
+            if source.end_of_file > int(config.get('maxSourceBytes', 26214400)):
+                raise ValueError('SIZE_LIMIT')
+            parser = ImageFile.Parser()
+            digest = hashlib.sha256()
+            boundary = ImageContainerBoundary()
+            offset = 0
+            while offset < source.end_of_file:
+                data = source.read(offset, min(1024 * 1024, client.connection.max_read_size,
+                                               source.end_of_file - offset))
+                if not data:
+                    raise ValueError('TRANSFER_INTERRUPTED')
+                parser.feed(data)
+                digest.update(data)
+                boundary.feed(data)
+                offset += len(data)
+            try:
+                image = parser.close()
+                media = IMAGE_FORMATS.get(image.format)
+                if not media:
+                    raise ValueError('UNSUPPORTED_IMAGE')
+                expected_extension = config.get('expectedExtension')
+                if expected_extension and expected_extension != media[1]:
+                    if not (expected_extension == 'jpeg' and media[1] == 'jpg'):
+                        raise ValueError('INVALID_IMAGE')
+                boundary.validate(image.format)
+            except ValueError:
+                raise
+            except Exception as exc:
+                raise ValueError('INVALID_IMAGE') from exc
+            if action == 'inspect':
+                emit(result=dict(bytes=str(offset), objectId=client.identity(source),
+                                 mediaType=media[0], extension=media[1],
+                                 sha256=digest.hexdigest()))
+                return
+            try:
+                image.seek(0)
+                image.thumbnail((int(config.get('width', 640)), int(config.get('height', 480))))
+                converted = image.convert('RGBA') if image.mode in ('RGBA', 'LA', 'P') else image.convert('RGB')
+                output = io.BytesIO()
+                converted.save(output, format='WEBP', quality=80, method=4)
+                thumb = output.getvalue()
+            except Exception as exc:
+                raise ValueError('INVALID_IMAGE') from exc
+            temp = config['tempPath']
+            cache = config['cachePath']
+            if path_parts(temp)[:-1] != path_parts(cache)[:-1] or not is_temporary_name(temp.split('/')[-1]):
+                raise ValueError('INVALID_PATH')
+            target = client.open(temp, directory=False, create=True, write=True, delete=True)
+            written = target.write(thumb, 0)
+            if written != len(thumb):
+                raise ValueError('TRANSFER_INTERRUPTED')
+            target.flush()
+            info = FileRenameInformation()
+            info['replace_if_exists'] = False
+            info['file_name'] = '\\'.join(path_parts(cache))
+            try:
+                client.set_info(target, info)
+            except Exception as exc:
+                if getattr(exc, 'status', None) != 0xC0000035:
+                    raise
+                cleanup = FileDispositionInformation()
+                cleanup['delete_pending'] = True
+                client.set_info(target, cleanup)
+            target.close()
+            emit(ready=dict(name=cache.split('/')[-1], relativePath=cache, type='file',
+                            sizeBytes=str(len(thumb)), modifiedAt=datetime.datetime.now().isoformat(),
+                            hidden=True, supported=True))
+            sys.stdout.buffer.write(thumb)
+            sys.stdout.buffer.flush()
+            emit(result=dict(bytes=str(len(thumb))))
         elif action in ('stat', 'read', 'cleanup'):
             handle = client.open(path, directory=False if action == 'read' else None, delete=action == 'cleanup')
             identity = client.identity(handle)
@@ -220,6 +406,13 @@ def run(config):
             identity = client.identity(handle)
             emit(created=dict(objectId=identity))
             expected, offset = int(config['size']), 0
+            digest = hashlib.sha256() if config.get('validateImage') else None
+            parser = None
+            boundary = None
+            if config.get('validateImage'):
+                _, ImageFile = load_image_support()
+                parser = ImageFile.Parser()
+                boundary = ImageContainerBoundary()
             while offset < expected:
                 data = sys.stdin.buffer.read(min(1024 * 1024, client.connection.max_write_size, expected - offset))
                 if not data:
@@ -228,11 +421,31 @@ def run(config):
                 if written != len(data):
                     raise ValueError('TRANSFER_INTERRUPTED')
                 offset += written
+                if digest:
+                    digest.update(data)
+                    parser.feed(data)
+                    boundary.feed(data)
                 emit(progress=str(offset))
             if sys.stdin.buffer.read(1):
                 raise ValueError('SIZE_MISMATCH')
             handle.flush()
-            emit(prepared=dict(bytes=str(offset), objectId=identity))
+            prepared = dict(bytes=str(offset), objectId=identity)
+            if parser:
+                try:
+                    image = parser.close()
+                    media = IMAGE_FORMATS.get(image.format)
+                    if not media:
+                        raise ValueError('UNSUPPORTED_IMAGE')
+                    if config.get('expectedExtension') and config['expectedExtension'] != media[1]:
+                        if not (config['expectedExtension'] == 'jpeg' and media[1] == 'jpg'):
+                            raise ValueError('INVALID_IMAGE')
+                    boundary.validate(image.format)
+                    prepared.update(mediaType=media[0], extension=media[1], sha256=digest.hexdigest())
+                except Exception as exc:
+                    if isinstance(exc, ValueError) and str(exc) == 'UNSUPPORTED_IMAGE':
+                        raise
+                    raise ValueError('INVALID_IMAGE') from exc
+            emit(prepared=prepared)
             with os.fdopen(3, 'r') as control:
                 if control.readline().strip() != 'commit':
                     raise ValueError('TRANSFER_INTERRUPTED')
@@ -269,6 +482,7 @@ if __name__ == '__main__':
         if isinstance(exc, ValueError) and str(exc) in {
             'INVALID_PATH', 'SMB_SECURITY_REQUIRED', 'UNSUPPORTED_LINK', 'DIRECTORY_TOO_LARGE',
             'OBJECT_CHANGED', 'TRANSFER_INTERRUPTED', 'SIZE_MISMATCH', 'INVALID_OPERATION',
+            'INVALID_IMAGE', 'UNSUPPORTED_IMAGE', 'SIZE_LIMIT',
         }:
             code = str(exc)
         emit(error=code)

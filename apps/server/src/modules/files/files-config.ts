@@ -26,6 +26,10 @@ export class FilesConfig {
   readonly perUser: number;
   readonly global: number;
   readonly maxQueued: number;
+  readonly imageMaxUpload: number;
+  readonly imagePublicPerMinute: number;
+  readonly imagePublicGlobalPerMinute: number;
+  readonly imagePublicMaxActivePerIp: number;
   readonly secureCookie: boolean;
   private readonly keys = new Map<string, Buffer>();
   constructor(config: ConfigService) {
@@ -56,6 +60,14 @@ export class FilesConfig {
     this.perUser = num('FILES_MAX_ACTIVE_PER_USER', 2, 16);
     this.global = num('FILES_MAX_ACTIVE_GLOBAL', 8, 64);
     this.maxQueued = num('FILES_MAX_QUEUED_PER_USER', 100, 1000);
+    this.imageMaxUpload = num('IMAGES_MAX_UPLOAD_BYTES', 26214400, 104857600);
+    this.imagePublicPerMinute = num('IMAGES_PUBLIC_REQUESTS_PER_MINUTE', 240, 10000);
+    this.imagePublicGlobalPerMinute = num(
+      'IMAGES_PUBLIC_GLOBAL_REQUESTS_PER_MINUTE',
+      5000,
+      1000000,
+    );
+    this.imagePublicMaxActivePerIp = num('IMAGES_PUBLIC_MAX_ACTIVE_PER_IP', 4, 64);
     this.secureCookie =
       str('NODE_ENV', 'development') === 'production' ||
       !bool('FILES_ALLOW_INSECURE_LOCAL_COOKIE', false);

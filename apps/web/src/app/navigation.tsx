@@ -1,6 +1,8 @@
 import { FilesPage } from '@/pages/files/files-page';
+import { ImagesPage } from '@/pages/images/images-page';
 import {
   FileStack,
+  Images,
   LayoutDashboard,
   Layers,
   ShieldCheck,
@@ -73,6 +75,13 @@ export const navigationGroups: NavigationGroup[] = [
         to: '/files',
         pagePermission: 'infra.files.page',
         element: <FilesPage />,
+      },
+      {
+        translationKey: 'navigation.images',
+        icon: Images,
+        to: '/images',
+        pagePermission: 'infra.images.page',
+        element: <ImagesPage />,
       },
     ],
   },

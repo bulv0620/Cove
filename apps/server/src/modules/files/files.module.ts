@@ -13,5 +13,6 @@ import {
   imports: [AccessControlModule],
   providers: [FilesConfig, SmbAdapter, SmbBindingsService, FilesService],
   controllers: [FilesController, FilesDownloadController, SmbBindingsController],
+  exports: [FilesConfig, SmbAdapter, SmbBindingsService],
 })
 export class FilesModule {}

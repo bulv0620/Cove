@@ -25,6 +25,10 @@ SMB_DOMAIN=
 SMB_ENCRYPTION_REQUIRED=true
 SMB_CREDENTIAL_KEY_ID=v1
 SMB_CREDENTIAL_KEY=<32-byte-random-key-in-base64>
+IMAGES_MAX_UPLOAD_BYTES=26214400
+IMAGES_PUBLIC_REQUESTS_PER_MINUTE=240
+IMAGES_PUBLIC_GLOBAL_REQUESTS_PER_MINUTE=5000
+IMAGES_PUBLIC_MAX_ACTIVE_PER_IP=4
 ```
 
 使用密码管理器或 `openssl rand -base64 32` 生成独立密钥，仅保存到受保护的 env/secret 存储，不提交到仓库。不要复用 JWT_SECRET，也不要把 NAS 用户密码写到 env：每个用户通过管理界面绑定。
@@ -47,11 +51,13 @@ SMB_ENCRYPTION_REQUIRED=false
 
 ## 浏览器与代理
 
-生产应用必须通过 HTTPS 访问，以使用 Secure 下载 cookie。只在本机 loopback HTTP 开发时设置 `FILES_ALLOW_INSECURE_LOCAL_COOKIE=true`；生产模式始终强制 Secure，不受此变量覆盖。生产镜像由 NestJS 同源提供 Web 与 API；本地开发由 Vite 代理 `/api`。
+生产应用必须通过 HTTPS 访问，以使用 Secure 下载 cookie并保护图床管理会话。只在本机 loopback HTTP 开发时设置 `FILES_ALLOW_INSECURE_LOCAL_COOKIE=true`；生产模式始终强制 Secure，不受此变量覆盖。生产镜像由 NestJS 同源提供 Web、`/api` 与匿名 `/image/{publicId}`；本地开发由 Vite 同时代理 `/api` 和 `/image`。
 
 生产应用直接把浏览器文件流交给 Server，不经过镜像内反向代理。Server 以实际字节计数执行大小限制，并关闭请求总时长限制；HTTP 读写空闲超时至少 120 秒，SMB 空闲超时默认 60 秒。持续有数据的大文件不会因固定总时长被截断。外部 HTTPS 反向代理也必须关闭上传与下载缓冲，并允许所需请求大小和持续时间。
 
 默认使用单个 Server 实例；跨实例并发配额和事件广播尚未实现，不能直接通过水平扩容宣称维持相同的全局配额。
+
+图床公开读取的 IP/全局分钟频率桶保存在 MySQL，可跨进程协调；SMB 活跃进程上限仍是单 Server 进程内配额。公开响应默认 `public, max-age=60, must-revalidate`，关闭链接会立即阻止后续源站请求，但无法召回客户端已经下载的副本。Cove 不配置域名、TLS、公网穿透或 CDN。
 
 ## Docker
 

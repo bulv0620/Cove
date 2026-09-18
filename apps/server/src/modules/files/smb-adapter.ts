@@ -15,7 +15,13 @@ export interface WorkerEvent {
   error?: string;
   ready?: FileEntry;
   created?: { objectId: string };
-  prepared?: { bytes: string; objectId: string };
+  prepared?: {
+    bytes: string;
+    objectId: string;
+    mediaType?: string;
+    extension?: string;
+    sha256?: string;
+  };
   progress?: string;
 }
 export interface WorkerHandle {

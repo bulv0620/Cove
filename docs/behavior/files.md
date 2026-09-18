@@ -11,6 +11,7 @@ Files 不显示额外页面标题区，文件管理器使用 flex 填满顶部�
 - Files 需要 `infra.files.page`；上传、下载、新建目录、重命名和删除分别需要 `infra.files.upload`、`infra.files.download`、`infra.files.mkdir`、`infra.files.rename`、`infra.files.delete`。NAS ACL 仍独立生效。
 - 平台超级管理员也需要绑定 SMB 身份。内置 administrator 角色延续既有“所有当前和未来权限”行为，自定义角色需要显式授权。
 - 文件请求从当前会话派生用户，不接受客户端指定其他用户、NAS 主机或共享。两个 Cove 用户若绑定同一 NAS 账号会共享该账号的文件视图。
+- 图床使用同一绑定并在 home 下维护普通可见目录 `Image Hosting/`。Files 不隐藏或锁定该目录；其中的新增、替换、重命名和删除会在图床下次对账时按对象身份和元数据处理。`.cove-cache/` 是图床的私有可重建缩略图缓存，不作为原图对账或公开来源。
 - 威联通的 `home` 按 SMB 身份映射个人虚拟空间，不能用 `homes/本地用户名` 替代身份隔离。
 - 解绑、换绑、用户禁用/删除和权限变更触发连接复查或撤销；长传输每 2 秒复查身份/版本。已经发送的字节或已成功提交的 NAS 文件无法撤销。删除平台用户不删除 NAS 账号或个人文件。
 - Cove 改密不修改 NAS 密码。NAS 改密后需更新 SMB 绑定。修改 NAS 目标配置会使旧绑定要求重新验证，不向新目标自动发送旧密码。

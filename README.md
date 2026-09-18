@@ -4,7 +4,7 @@ Your self-hosted personal workspace — 运行在 NAS 上的自托管个人工�
 
 ## 当前状态
 
-**Identity & Access Management Foundation**。当前包含 MySQL 持久化用户、JWT、按用户名/IP 的登录限流与递增冷却、全局 RBAC、用户与角色管理、权限驱动路由、审计日志、最小 Dashboard 和 SMB 个人文件访问。图床、Markdown + Canvas 笔记、应用工具及定时 JS 脚本属于[功能规划](docs/product/roadmap.md)，尚未实现。
+**Self-hosted personal workspace foundation**。当前包含身份与访问管理、审计、SMB 个人文件访问，以及基于 SMB 的私有优先图床。Markdown + Canvas 笔记、应用工具及定时 JS 脚本属于[功能规划](docs/product/roadmap.md)，尚未实现。
 
 ## 技术栈
 

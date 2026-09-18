@@ -4,6 +4,7 @@ import { statSync } from 'node:fs';
 import path from 'node:path';
 
 const API_PATH = /^\/api(?:\/|$|%2f)/i;
+const PUBLIC_IMAGE_PATH = /^\/image(?:\/|$|%2f)/i;
 const HASHED_ASSET_PATH = /^\/assets\//;
 const DOTFILE_PATH = /(?:^|\/)\.[^/]/;
 
@@ -15,7 +16,13 @@ export function isPageNavigation(req: Pick<Request, 'method' | 'path' | 'accepts
   } catch {
     return false;
   }
-  if (API_PATH.test(req.path) || API_PATH.test(requestPath)) return false;
+  if (
+    API_PATH.test(req.path) ||
+    API_PATH.test(requestPath) ||
+    PUBLIC_IMAGE_PATH.test(req.path) ||
+    PUBLIC_IMAGE_PATH.test(requestPath)
+  )
+    return false;
   if (DOTFILE_PATH.test(requestPath)) return false;
   if (requestPath.startsWith('/assets/') || path.posix.extname(requestPath)) return false;
   return req.accepts('html') !== false;
@@ -48,7 +55,7 @@ export function configureStaticAssets(app: NestExpressApplication, configuredRoo
   });
 
   app.use((req: Request, res: Response, next: NextFunction) => {
-    if (API_PATH.test(req.path)) return next();
+    if (API_PATH.test(req.path) || PUBLIC_IMAGE_PATH.test(req.path)) return next();
     if (!isPageNavigation(req)) {
       res.status(404).type('text/plain').send('Not Found');
       return;

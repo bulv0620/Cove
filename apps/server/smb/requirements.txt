@@ -3,3 +3,5 @@ cryptography==50.0.1
 pyspnego==0.12.2
 cffi==2.1.1
 pycparser==3.0
+Pillow==11.3.0
+pillow-avif-plugin==1.5.2

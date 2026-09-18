@@ -243,3 +243,40 @@ export interface FileDeleteResponse {
   deleted: string[];
   failed: Array<{ path: string; code: string }>;
 }
+
+export interface ImageHostingStatus extends SmbBindingSummary {
+  rootPath: string;
+  maxUploadBytes: string;
+  capabilities: { upload: boolean; publish: boolean; delete: boolean };
+}
+
+export interface HostedImage {
+  id: string;
+  name: string;
+  mediaType: string | null;
+  sizeBytes: string;
+  modifiedAt: string | null;
+  state: string;
+  isPublic: boolean;
+  publicUrl: string | null;
+  errorCode: string | null;
+  thumbnailUrl: string;
+  previewUrl: string;
+}
+
+export interface HostedImagesResponse {
+  images: HostedImage[];
+  nextCursor: string | null;
+  total: number;
+  syncedAt: string;
+}
+
+export interface ImageUploadSummary {
+  id: string;
+  name: string;
+  expectedBytes: string;
+  transferredBytes: string;
+  state: string;
+  errorCode: string | null;
+  createdAt: string;
+}

@@ -149,6 +149,14 @@ export class SmbBindingsService {
         },
       });
       await tx.downloadTicket.deleteMany({ where: { userId } });
+      await tx.imagePublicGrant.updateMany({
+        where: { asset: { userId }, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+      await tx.imageAsset.updateMany({
+        where: { userId, state: 'PUBLIC' },
+        data: { state: 'REVOKED', errorCode: 'BINDING_CHANGED' },
+      });
     });
     filesEvents.emit('revoke', userId);
     await this.audit(actor.id, 'files.binding.save', userId, 'SUCCESS');
@@ -159,6 +167,10 @@ export class SmbBindingsService {
       await tx.$queryRaw`SELECT id FROM users WHERE id = ${userId} FOR UPDATE`;
       await tx.smbBinding.deleteMany({ where: { userId } });
       await tx.downloadTicket.deleteMany({ where: { userId } });
+      await tx.imagePublicGrant.updateMany({
+        where: { asset: { userId }, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
       await tx.fileOperation.updateMany({
         where: { userId, state: { in: ['QUEUED', 'RUNNING'] } },
         data: { state: 'CANCELED', errorCode: 'SMB_NOT_BOUND' },

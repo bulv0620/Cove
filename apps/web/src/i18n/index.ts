@@ -1,5 +1,6 @@
 import { readStored, writeStored } from '@/lib/storage';
 import { filesEn, filesZh } from '@/features/files/messages';
+import { imagesEn, imagesZh } from '@/features/images/messages';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
@@ -9,6 +10,7 @@ const resources = {
   en: {
     translation: {
       files: filesEn,
+      images: imagesEn,
       common: {
         productSubtitle: 'Personal Workspace',
         soon: 'Soon',
@@ -87,6 +89,7 @@ const resources = {
         resources: 'Resources',
         infrastructure: 'Infrastructure',
         files: 'Files',
+        images: 'Image Hosting',
         applications: 'Applications',
         network: 'Network',
         backup: 'Backup',
@@ -300,6 +303,7 @@ const resources = {
   'zh-CN': {
     translation: {
       files: filesZh,
+      images: imagesZh,
       common: {
         productSubtitle: '个人工作台',
         soon: '规划中',
@@ -375,6 +379,7 @@ const resources = {
         resources: '资源',
         infrastructure: '基础设施',
         files: '文件',
+        images: '图床',
         applications: '应用',
         network: '网络',
         backup: '备份',

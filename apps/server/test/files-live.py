@@ -5,6 +5,7 @@ The NAS directory and application user are removed after successful verification
 Never run with credentials in argv or commit the configuration file.
 """
 import hashlib
+import base64
 import json
 import os
 import urllib.error
@@ -27,6 +28,13 @@ def run(config):
                 return response.status, json.load(response) if response.status != 204 else None, response.headers
         except urllib.error.HTTPError as error:
             return error.code, json.load(error), error.headers
+
+    def public_image(path):
+        try:
+            with urllib.request.urlopen(config['baseUrl'].rstrip('/') + path, timeout=60) as response:
+                return response.status, response.read(), response.headers
+        except urllib.error.HTTPError as error:
+            return error.code, error.read(), error.headers
 
     status, login, _ = request('/auth/login', {'username': config['adminUsername'], 'password': config['adminPassword']})
     assert status == 201, 'Administrator login failed'
@@ -100,7 +108,33 @@ def run(config):
             assert status == 200 and removed == {'deleted': [target], 'failed': []}
         status, _, _ = request('/files/stat?' + urllib.parse.urlencode({'path': '../other'}), token=token)
         assert status == 400
-        print('PASS: binding, personal folder, Unicode upload, conflict preservation, listing, download checksum, rename, partial delete, cleanup, traversal rejection.')
+        image_name = 'Cove-image-' + uuid.uuid4().hex[:12] + '.png'
+        image = base64.b64decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
+        )
+        status, operation, _ = request('/images/uploads', {
+            'name': image_name, 'size': str(len(image)), 'requestId': str(uuid.uuid4()), 'publish': True,
+        }, token=token)
+        assert status == 201
+        status, hosted, _ = request('/images/uploads/' + operation['id'] + '/content', image, method='PUT', token=token, raw=True)
+        assert status == 200 and hosted['isPublic'] is True
+        old_link = hosted['publicUrl']
+        status, downloaded_image, headers = public_image(old_link)
+        assert status == 200 and downloaded_image == image
+        assert headers['Content-Type'] == 'image/png'
+        assert headers['X-Content-Type-Options'] == 'nosniff'
+        status, summary, _ = request('/users/' + user_id + '/smb-binding', {
+            'username': config['smbUsername'], 'password': config['smbPassword'],
+            'expectedVersion': summary['version'],
+        }, method='PUT', token=admin)
+        assert status == 200
+        assert public_image(old_link)[0] == 404, 'Old image link survived SMB rebind'
+        status, gallery, _ = request('/images?' + urllib.parse.urlencode({'filter': image_name}), token=token)
+        assert status == 200 and len(gallery['images']) == 1
+        assert gallery['images'][0]['isPublic'] is False
+        status, _, _ = request('/images/' + gallery['images'][0]['id'], method='DELETE', token=token)
+        assert status == 200
+        print('PASS: Files lifecycle plus image upload, anonymous link, safe headers, rebind revocation, private rediscovery, and cleanup.')
     finally:
         status, _, _ = request('/users/' + user_id, method='DELETE', token=admin)
         assert status == 204, 'Remove the disposable test user manually'

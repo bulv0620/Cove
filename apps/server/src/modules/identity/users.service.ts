@@ -176,9 +176,21 @@ export class UsersService {
     }
     if (input.status === UserStatus.DISABLED && user.isSuperAdmin)
       throw new ConflictException('The platform super administrator cannot be disabled.');
-    await this.prisma.user.update({
-      where: { id },
-      data: { status: input.status, authVersion: { increment: 1 } },
+    await this.prisma.$transaction(async (transaction) => {
+      await transaction.user.update({
+        where: { id },
+        data: { status: input.status, authVersion: { increment: 1 } },
+      });
+      if (input.status === UserStatus.DISABLED) {
+        await transaction.imagePublicGrant.updateMany({
+          where: { asset: { userId: id }, revokedAt: null },
+          data: { revokedAt: new Date() },
+        });
+        await transaction.imageAsset.updateMany({
+          where: { userId: id, state: 'PUBLIC' },
+          data: { state: 'REVOKED', errorCode: 'AUTH_EXPIRED' },
+        });
+      }
     });
     await this.audit.record({
       actorUserId: actor.id,
