@@ -9,7 +9,7 @@ import {
   Eye,
   EyeOff,
   FileImage,
-  Images,
+  HardDrive,
   LoaderCircle,
   RefreshCw,
   Search,
@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { fileSize } from '@/features/files/api';
+import { useAuth } from '@/features/auth/hooks';
 import { imageBlob, imagesApi, uploadImage } from '@/features/images/api';
 import { cn } from '@/lib/utils';
 
@@ -80,6 +81,7 @@ type UploadRow = {
 
 export function ImagesPage(): JSX.Element {
   const { t, i18n } = useTranslation();
+  const { user } = useAuth();
   const cache = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
   const currentUploadRef = useRef<{ id: string; controller: AbortController }>();
@@ -96,10 +98,14 @@ export function ImagesPage(): JSX.Element {
   const [selectionError, setSelectionError] = useState(false);
 
   const status = useQuery({
-    queryKey: ['images', 'status'],
+    queryKey: ['images', user?.id, 'status'],
     queryFn: imagesApi.status,
     retry: false,
   });
+  const available =
+    !!status.data?.enabled &&
+    !!status.data.bound &&
+    !['SMB_CONFIG_CHANGED'].includes(status.data.state);
   const listing = useInfiniteQuery({
     queryKey: ['images', filter, visibility, sort],
     queryFn: ({ pageParam }) =>
@@ -112,7 +118,7 @@ export function ImagesPage(): JSX.Element {
       }),
     initialPageParam: '',
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    enabled: status.data?.bound === true,
+    enabled: available,
     retry: false,
   });
   const images = listing.data?.pages.flatMap((page) => page.images) ?? [];
@@ -211,6 +217,13 @@ export function ImagesPage(): JSX.Element {
 
   const errorText = (value?: string) =>
     value ? t(`files.errors.${value}`, { defaultValue: t('images.requestFailed') }) : null;
+  const statusError =
+    status.error?.message ??
+    (!status.data?.enabled
+      ? 'SMB_DISABLED'
+      : !status.data.bound
+        ? 'SMB_NOT_BOUND'
+        : status.data.state);
 
   const synced = useMemo(
     () =>
@@ -228,15 +241,24 @@ export function ImagesPage(): JSX.Element {
         <LoaderCircle className="h-6 w-6 animate-spin" />
       </div>
     );
-  if (status.isError || !status.data?.bound)
+  if (!available)
     return (
-      <section className="mx-auto max-w-xl rounded-xl border bg-card p-8 text-center shadow-sm">
-        <Images className="mx-auto h-10 w-10 text-muted-foreground" />
-        <h1 className="mt-4 text-xl font-semibold">{t('images.unavailable')}</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{t('images.notBound')}</p>
-        <Button className="mt-6" variant="outline" onClick={() => void status.refetch()}>
-          {t('images.retry')}
-        </Button>
+      <section className="flex min-h-[calc(100dvh-8rem)] flex-col items-center justify-center gap-4 bg-card p-6 text-center">
+        <HardDrive className="h-10 w-10 text-muted-foreground" />
+        <p className="font-medium">{errorText(statusError)}</p>
+        <p className="max-w-md text-sm text-muted-foreground">
+          {t(status.data?.enabled ? 'files.contact' : 'files.configHint')}
+        </p>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => void status.refetch()}>
+            {t('files.refresh')}
+          </Button>
+          {(user?.isSuperAdmin || user?.permissions.includes('identity.user.page')) && (
+            <Button asChild>
+              <Link to="/users">{t('files.manage')}</Link>
+            </Button>
+          )}
+        </div>
       </section>
     );
 
@@ -261,7 +283,7 @@ export function ImagesPage(): JSX.Element {
               {t('images.openFiles')}
             </Link>
           </Button>
-          {status.data.capabilities.upload && (
+          {status.data?.capabilities.upload && (
             <Button
               onClick={() => {
                 setUploads([]);
@@ -388,7 +410,7 @@ export function ImagesPage(): JSX.Element {
                     </Button>
                   </div>
                 ) : (
-                  status.data.capabilities.publish && (
+                  status.data?.capabilities.publish && (
                     <Button
                       className="mt-3 w-full"
                       variant="outline"
@@ -449,7 +471,7 @@ export function ImagesPage(): JSX.Element {
             {t('images.selectionInvalid')}
           </p>
         )}
-        {status.data.capabilities.publish && (
+        {status.data?.capabilities.publish && (
           <label className="mt-5 flex items-start gap-3 rounded-lg border p-4">
             <input
               type="checkbox"
@@ -569,7 +591,7 @@ export function ImagesPage(): JSX.Element {
                     >
                       {t('images.copyMarkdown')}
                     </Button>
-                    {status.data.capabilities.publish && (
+                    {status.data?.capabilities.publish && (
                       <Button
                         variant="outline"
                         disabled={visibilityMutation.isPending}
@@ -584,7 +606,7 @@ export function ImagesPage(): JSX.Element {
                   </div>
                 </div>
               ) : (
-                status.data.capabilities.publish && (
+                status.data?.capabilities.publish && (
                   <Button
                     variant="outline"
                     disabled={visibilityMutation.isPending}
@@ -594,7 +616,7 @@ export function ImagesPage(): JSX.Element {
                   </Button>
                 )
               )}{' '}
-              {status.data.capabilities.delete && (
+              {status.data?.capabilities.delete && (
                 <div className="border-t pt-5">
                   <Button
                     variant="outline"
