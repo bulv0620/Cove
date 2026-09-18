@@ -10,14 +10,22 @@ import type {
   FileEntriesResponse,
   FilesStatus,
   FileOperationSummary,
-} from '@home-ops/shared';
+} from '@cove/shared';
 import type { FileOperation } from '../../generated/prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { PermissionsService } from '../access-control/permissions.service';
 import { FilesConfig } from './files-config';
 import { SmbBindingsService } from './smb-bindings.service';
 import { SmbAdapter, type WorkerHandle } from './smb-adapter';
-import { childPath, errorCode, filesError, objectInput, relativePath } from './files-policy';
+import {
+  isTemporaryName,
+  UPLOAD_TEMP_PREFIX,
+  childPath,
+  errorCode,
+  filesError,
+  objectInput,
+  relativePath,
+} from './files-policy';
 import { filesEvents } from './files-events';
 
 type Active = {
@@ -193,7 +201,7 @@ export class FilesService implements OnModuleInit, OnModuleDestroy {
       const rows = await this.metadataCall<FileEntry[]>(actor, 'list', { path });
       const entries = rows.filter(
         (entry) =>
-          !entry.name.toLowerCase().startsWith('.homeops-upload-') &&
+          !isTemporaryName(entry.name) &&
           (input.showHidden === 'true' || !entry.hidden) &&
           entry.name.toLocaleLowerCase().includes(filter.toLocaleLowerCase()),
       );
@@ -358,7 +366,7 @@ export class FilesService implements OnModuleInit, OnModuleDestroy {
           configFingerprint: this.config.fingerprint,
           authVersion: user.authVersion,
           relativePath: path,
-          tempPath: [relativePath(input.parentPath), `.homeops-upload-${id}.part`]
+          tempPath: [relativePath(input.parentPath), `${UPLOAD_TEMP_PREFIX}${id}.part`]
             .filter(Boolean)
             .join('/'),
           expectedBytes: size,

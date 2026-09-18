@@ -11,7 +11,7 @@ import type {
   ResourceItem,
   UpdateResourceActionRequest,
   UpdateResourceRequest,
-} from '@home-ops/shared';
+} from '@cove/shared';
 import { v7 as uuidv7 } from 'uuid';
 import { PrismaService } from '../../database/prisma.service';
 import { PermissionStatus, PermissionType, ResourceStatus } from '../../generated/prisma/enums';

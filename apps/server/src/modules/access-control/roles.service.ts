@@ -9,7 +9,7 @@ import type {
   ManagedRole,
   PermissionItem,
   UpdateRoleRequest,
-} from '@home-ops/shared';
+} from '@cove/shared';
 import { v7 as uuidv7 } from 'uuid';
 import { PrismaService } from '../../database/prisma.service';
 import { PermissionStatus } from '../../generated/prisma/enums';

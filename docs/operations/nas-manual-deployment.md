@@ -1,6 +1,6 @@
 # 威联通 NAS 手动部署
 
-本文说明如何在开发电脑构建 Home Ops 镜像，将镜像文件传到威联通 NAS，并通过 Docker Compose 使用外部 MySQL 手动部署。该流程不依赖镜像仓库，适合首次部署、内网环境和低频更新。
+本文说明如何在开发电脑构建 Cove 镜像，将镜像文件传到威联通 NAS，并通过 Docker Compose 使用外部 MySQL 手动部署。该流程不依赖镜像仓库，适合首次部署、内网环境和低频更新。
 
 命令以启用了 Container Station 和 SSH 的威联通 NAS 为例。不同机型的共享目录可能不是 `/share/Container`，请替换为实际路径。当前配置已在本机 Docker ARM64 环境验证；实际 NAS、HTTPS 和 SMB 大文件验收状态见[归档 Spec](../specs/archive/2026-09-17-single-application-image/tasks.md)。
 
@@ -9,7 +9,7 @@
 NAS 需要具备：
 
 - Container Station、Docker Compose v2 和 SSH 访问。
-- 一个从 Home Ops 容器可访问的外部 MySQL 数据库。
+- 一个从 Cove 容器可访问的外部 MySQL 数据库。
 - 未被占用的 Web 端口，默认使用 8080。
 - 若启用 Files，容器可以访问 NAS SMB TCP 445。
 
@@ -27,9 +27,9 @@ docker compose version
 | `x86_64`        | `linux/amd64` |
 | `aarch64`       | `linux/arm64` |
 
-外部 MySQL 必须预先创建 `home_ops` 数据库和应用账号，并允许来自 Docker 网段的连接。若 MySQL 也运行在 NAS Docker 中，可以将其端口映射到 NAS 局域网地址，然后在 `DATABASE_URL` 中使用 NAS IP；也可以将两个 Compose 项目加入同一个外部 Docker 网络并使用数据库服务名。不要使用应用容器中的 `127.0.0.1` 指向 NAS 或另一个容器。
+外部 MySQL 必须预先创建 `cove` 数据库和应用账号，并允许来自 Docker 网段的连接。若 MySQL 也运行在 NAS Docker 中，可以将其端口映射到 NAS 局域网地址，然后在 `DATABASE_URL` 中使用 NAS IP；也可以将两个 Compose 项目加入同一个外部 Docker 网络并使用数据库服务名。不要使用应用容器中的 `127.0.0.1` 指向 NAS 或另一个容器。
 
-部署或升级前，通过外部数据库自己的管理方式完成备份并验证可恢复。数据库备份不由 Home Ops Compose 管理。
+部署或升级前，通过外部数据库自己的管理方式完成备份并验证可恢复。数据库备份不由 Cove Compose 管理。
 
 ## 2. 在开发电脑构建镜像
 
@@ -38,7 +38,7 @@ docker compose version
 ```sh
 docker buildx build \
   --platform linux/amd64 \
-  --tag home-ops:0.1.0 \
+  --tag cove:0.1.0 \
   --load \
   .
 ```
@@ -48,7 +48,7 @@ ARM64 NAS 将平台替换为 `linux/arm64`。`--load` 只适用于单平台构�
 确认镜像存在：
 
 ```sh
-docker image inspect home-ops:0.1.0 \
+docker image inspect cove:0.1.0 \
   --format '{{.Os}}/{{.Architecture}} user={{.Config.User}}'
 ```
 
@@ -59,25 +59,25 @@ docker image inspect home-ops:0.1.0 \
 导出并压缩镜像：
 
 ```sh
-docker save home-ops:0.1.0 | gzip > home-ops-0.1.0.tar.gz
-shasum -a 256 home-ops-0.1.0.tar.gz > home-ops-0.1.0.tar.gz.sha256
+docker save cove:0.1.0 | gzip > cove-0.1.0.tar.gz
+shasum -a 256 cove-0.1.0.tar.gz > cove-0.1.0.tar.gz.sha256
 ```
 
 将以下文件通过 SMB、File Station 或 `scp` 放入 NAS 部署目录：
 
 ```text
-/share/Container/home-ops/
+/share/Container/cove/
 ├── compose.yaml
 ├── .env
-├── home-ops-0.1.0.tar.gz
-└── home-ops-0.1.0.tar.gz.sha256
+├── cove-0.1.0.tar.gz
+└── cove-0.1.0.tar.gz.sha256
 ```
 
 NAS 使用 `sha256sum` 时，可以这样校验：
 
 ```sh
-cd /share/Container/home-ops
-sha256sum -c home-ops-0.1.0.tar.gz.sha256
+cd /share/Container/cove
+sha256sum -c cove-0.1.0.tar.gz.sha256
 ```
 
 如果开发电脑生成的校验文件包含不同路径，直接比较两端输出的 SHA-256 值。
@@ -85,23 +85,23 @@ sha256sum -c home-ops-0.1.0.tar.gz.sha256
 ## 4. 在 NAS 导入镜像
 
 ```sh
-cd /share/Container/home-ops
-gunzip -c home-ops-0.1.0.tar.gz | docker load
-docker image inspect home-ops:0.1.0 \
+cd /share/Container/cove
+gunzip -c cove-0.1.0.tar.gz | docker load
+docker image inspect cove:0.1.0 \
   --format '{{.Os}}/{{.Architecture}} user={{.Config.User}}'
 ```
 
-导入后的标签必须与 `.env` 中的 `HOME_OPS_VERSION` 完全一致。
+导入后的标签必须与 `.env` 中的 `COVE_VERSION` 完全一致。
 
 ## 5. 创建生产环境变量
 
 在 NAS 部署目录创建 `.env`。不要把它提交到 Git，也不要与镜像文件一起公开分享。
 
 ```dotenv
-HOME_OPS_VERSION=0.1.0
+COVE_VERSION=0.1.0
 WEB_PORT=8080
 
-DATABASE_URL='mysql://home_ops:URL编码后的密码@192.168.1.100:3306/home_ops?allowPublicKeyRetrieval=true'
+DATABASE_URL='mysql://cove:URL编码后的密码@192.168.1.100:3306/cove?allowPublicKeyRetrieval=true'
 JWT_SECRET=替换为独立的长随机密钥
 
 BOOTSTRAP_ADMIN_USERNAME=admin
@@ -211,14 +211,14 @@ BOOTSTRAP_ADMIN_PASSWORD=
 在开发电脑使用新标签构建和导出，例如 `0.1.1`，上传后在 NAS 导入：
 
 ```sh
-gunzip -c home-ops-0.1.1.tar.gz | docker load
-docker image inspect home-ops:0.1.1
+gunzip -c cove-0.1.1.tar.gz | docker load
+docker image inspect cove:0.1.1
 ```
 
 先备份外部数据库并记录旧标签，然后将 `.env` 改为：
 
 ```dotenv
-HOME_OPS_VERSION=0.1.1
+COVE_VERSION=0.1.1
 ```
 
 执行：
@@ -236,7 +236,7 @@ docker compose --env-file .env \
 升级后验证登录、用户、角色、Files 和关键 API，再考虑删除旧镜像。不要使用宽泛的镜像清理命令；确认无需回滚后按明确标签删除：
 
 ```sh
-docker image rm home-ops:0.1.0
+docker image rm cove:0.1.0
 ```
 
 ## 9. 回滚
@@ -244,7 +244,7 @@ docker image rm home-ops:0.1.0
 数据库 schema 与旧应用兼容时，把 `.env` 中的版本改回旧标签：
 
 ```dotenv
-HOME_OPS_VERSION=0.1.0
+COVE_VERSION=0.1.0
 ```
 
 然后执行：
@@ -272,7 +272,7 @@ docker compose --env-file .env \
 --no-build --pull never
 ```
 
-并确认 `HOME_OPS_VERSION` 与 `docker image ls home-ops` 中的标签一致。
+并确认 `COVE_VERSION` 与 `docker image ls cove` 中的标签一致。
 
 ### 数据库连接失败
 
@@ -294,4 +294,4 @@ WEB_PORT=18080
 docker compose --env-file .env down
 ```
 
-该命令只删除 Home Ops 容器和默认网络，不会停止或删除外部 MySQL。
+该命令只删除 Cove 容器和默认网络，不会停止或删除外部 MySQL。

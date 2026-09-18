@@ -2,11 +2,11 @@
 
 ## 当前仓库结构
 
-Home Ops 使用 pnpm workspace 与 Turborepo 管理 TypeScript 单仓库：
+Cove 使用 pnpm workspace 与 Turborepo 管理 TypeScript 单仓库：
 
 ```text
 apps/
-  web/       React + Vite 管理界面
+  web/       React + Vite 个人工作台
   server/    NestJS API 与后台业务逻辑
 packages/
   shared/    前后端共享类型
@@ -37,7 +37,7 @@ React Web ──────────► NestJS Server ───────�
 
 FilesModule 已通过独立 Python SMB 协议进程连接 NAS。凭据采用 AES-256-GCM 加密保存，文件字节通过管道流式传输；MySQL 保存绑定、上传状态和一次性下载票据。NAS 文件与 ACL 为文件事实源，默认单 Server 实例。详见 [Files 行为](../behavior/files.md) 与 [运行配置](../operations/files.md)。
 
-新增基础设施模块时遵循：
+新增功能模块时遵循：
 
 - Controller 只处理传输协议、鉴权声明和输入转换。
 - Service 负责用例编排与事务边界。
@@ -56,7 +56,7 @@ FilesModule 已通过独立 Python SMB 协议进程连接 NAS。凭据采用 AES
 
 ## 部署现状
 
-仓库提供根目录 `Dockerfile` 和 `compose.yaml`：多阶段构建将 Web 静态产物、NestJS Server 和 Python SMB 环境放入一个 Home Ops 应用镜像，由 NestJS 在同一端口提供页面与 `/api`。Compose 不创建 MySQL 服务或数据库卷，通过 `DATABASE_URL` 连接维护者管理的外部 MySQL。一次性迁移与 seed 服务成功退出后才启动应用；管理员单独初始化。默认只发布应用的宿主机 8080 端口。操作见 [`../operations/docker.md`](../operations/docker.md)。本机 clean-room 已通过；实际 NAS 与旧部署现场验证由维护者延期，证据见[归档 Spec](../specs/archive/2026-09-17-single-application-image/tasks.md)。
+仓库提供根目录 `Dockerfile` 和 `compose.yaml`：多阶段构建将 Web 静态产物、NestJS Server 和 Python SMB 环境放入一个 Cove 应用镜像，由 NestJS 在同一端口提供页面与 `/api`。Compose 不创建 MySQL 服务或数据库卷，通过 `DATABASE_URL` 连接维护者管理的外部 MySQL。一次性迁移与 seed 服务成功退出后才启动应用；管理员单独初始化。默认只发布应用的宿主机 8080 端口。操作见 [`../operations/docker.md`](../operations/docker.md)。本机 clean-room 已通过；实际 NAS 与旧部署现场验证由维护者延期，证据见[归档 Spec](../specs/archive/2026-09-17-single-application-image/tasks.md)。
 
 ## 本地配置边界
 

@@ -1,4 +1,4 @@
-import type { SystemStatus } from '@home-ops/shared';
+import type { SystemStatus } from '@cove/shared';
 import { apiRequest } from '@/lib/api';
 
 export const systemApi = {

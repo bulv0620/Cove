@@ -27,8 +27,8 @@
 - 维护者已批准设计，Spec 为 `In Progress`。Dockerfile、Compose、Nginx、变量示例和部署说明均已添加；上方实施任务同时包含运行验收，未全部验证的任务保持未勾选。
 - 基础镜像固定为 Node 22.14.0 bookworm slim、Nginx 1.28.0 alpine、MySQL 8.4.6；pnpm 固定 9.12.2。Server 编译入口已核实为 `dist/main.js`；运行镜像保留迁移与初始化所需源码及工具。
 - 2026-09-11，macOS arm64、Docker Engine 28.5.1、Compose 2.40.3：以临时随机测试变量执行 `docker compose --env-file /dev/null --profile tools config --format json`，仅在内存检查展开结果，确认端口范围、初始化依赖和管理员密码仅注入工具服务；逐项清空必需变量，`config --quiet` 均失败且错误中不含 canary 密钥。通过（`DOCKER-FR-002`、`DOCKER-FR-003`、`DOCKER-FR-006`、`DOCKER-AC-003` 的配置部分）。
-- 2026-09-11：以非敏感占位 URL 执行 `pnpm --filter @home-ops/server build`，然后执行 `pnpm --filter @home-ops/web build`，均通过；确认编译入口存在。Web 保留既有的大 chunk 警告。此结果不代替 Linux 镜像构建验证。
-- 2026-09-11：隔离项目 `home-ops-docker-check-20260911` 使用本机已有 `mysql:8.4.6`，执行 `up -d --pull never --wait --wait-timeout 150 mysql`；创建测试表并插入记录，使用部署说明中的 mysqldump 参数备份到内存，删除记录后导入恢复，确认记录一致；执行 `down` 再 `up` 后记录仍存在。MySQL 日志 canary 扫描通过。最后仅对该测试项目执行 `down -v`，已清理容器与测试卷（`DOCKER-AC-002`、`DOCKER-AC-004` 的数据库部分）。
+- 2026-09-11：以非敏感占位 URL 执行 `pnpm --filter @cove/server build`，然后执行 `pnpm --filter @cove/web build`，均通过；确认编译入口存在。Web 保留既有的大 chunk 警告。此结果不代替 Linux 镜像构建验证。
+- 2026-09-11：隔离项目 `cove-docker-check-20260911` 使用本机已有 `mysql:8.4.6`，执行 `up -d --pull never --wait --wait-timeout 150 mysql`；创建测试表并插入记录，使用部署说明中的 mysqldump 参数备份到内存，删除记录后导入恢复，确认记录一致；执行 `down` 再 `up` 后记录仍存在。MySQL 日志 canary 扫描通过。最后仅对该测试项目执行 `down -v`，已清理容器与测试卷（`DOCKER-AC-002`、`DOCKER-AC-004` 的数据库部分）。
 - 2026-09-11：修改文档与 Compose 的 Prettier 格式检查、相对文档链接检查、`git diff --check` 通过。
 - 阻塞：`docker compose --env-file /dev/null build server web` 在获取基础镜像认证 token 阶段失败，`auth.docker.io:443` 连接超时；宿主机 `curl` 连通性复查同样超时。尚未进入 Dockerfile 构建步骤。未修改 Docker 或宿主机网络设置。
 - 待网络恢复后完成：干净镜像构建、全栈启动和代理登录、管理员幂等、API 重启、数据库/迁移失败阻断、镜像层及应用日志 canary 扫描、上一应用版本回滚。完整验收前不得标记 `Completed`。

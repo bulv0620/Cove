@@ -1,7 +1,7 @@
-name: home-ops
+name: cove
 
 x-server: &server
-  image: home-ops:${HOME_OPS_VERSION:-local}
+  image: cove:${COVE_VERSION:-local}
   build:
     context: .
     dockerfile: Dockerfile

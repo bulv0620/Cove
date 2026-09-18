@@ -1,5 +1,5 @@
 {
-  "name": "@home-ops/shared",
+  "name": "@cove/shared",
   "version": "0.1.0",
   "private": true,
   "types": "src/index.ts",
@@ -13,8 +13,8 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@home-ops/eslint-config": "workspace:*",
-    "@home-ops/tsconfig": "workspace:*",
+    "@cove/eslint-config": "workspace:*",
+    "@cove/tsconfig": "workspace:*",
     "@typescript-eslint/eslint-plugin": "^8.24.1",
     "@typescript-eslint/parser": "^8.24.1",
     "eslint": "^8.57.1",

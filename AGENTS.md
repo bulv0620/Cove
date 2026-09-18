@@ -1,4 +1,4 @@
-# Home Ops Agent Guide
+# Cove Agent Guide
 
 Before changing this repository, read [`docs/README.md`](docs/README.md) and follow its authority order.
 

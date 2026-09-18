@@ -5,7 +5,7 @@ import type {
   FileOperationSummary,
   FilesStatus,
   SmbBindingSummary,
-} from '@home-ops/shared';
+} from '@cove/shared';
 import { apiRequest, tokenStorage, ApiError } from '@/lib/api';
 export const fileApiBase =
   (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') ?? '';

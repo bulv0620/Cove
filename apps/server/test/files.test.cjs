@@ -60,7 +60,8 @@ test('path boundary rejects traversal, UNC, ADS, reserved temporary names and am
     'a.',
     'a ',
     'CON.txt',
-    '.homeops-upload-x.part',
+    '.cove-upload-x.part',
+    '.COVE-UPLOAD-x.part',
   ])
     assert.throws(() => relativePath(path), code('INVALID_PATH'));
   assert.equal(relativePath('文档/测试 %2e%2e 🏠.txt'), '文档/测试 %2e%2e 🏠.txt');
@@ -195,7 +196,8 @@ test('super administrator still requires own SMB binding', async () => {
 });
 test('10,000 entry sort, paging, hidden filtering and per-binding cursors are correct', async () => {
   const { service, user, binding, rows } = harness();
-  rows.push({ name: '.homeops-upload-secret.part', type: 'file', hidden: true });
+  for (const prefix of ['.cove-upload-', '.COVE-UPLOAD-'])
+    rows.push({ name: `${prefix}secret.part`, type: 'file', hidden: true });
   const page = await service.entries(user, {
     path: '',
     limit: '200',
@@ -337,4 +339,59 @@ test('the configured upload limit is enforced before starting any SMB write', as
     }),
     code('SIZE_LIMIT'),
   );
+});
+test('new uploads persist Cove temporary paths', async () => {
+  const { service, db, user } = harness();
+  let saved;
+  db.$transaction = async (fn) =>
+    fn({
+      $queryRaw: async () => [],
+      fileOperation: {
+        findUnique: async () => null,
+        count: async () => 0,
+        create: async ({ data }) => {
+          saved = data;
+          return { ...data, transferredBytes: 0n, createdAt: new Date() };
+        },
+      },
+    });
+  await service.createUpload(user, {
+    parentPath: 'docs',
+    name: 'test.txt',
+    size: '0',
+    requestId: randomUUID(),
+  });
+  assert.match(saved.tempPath, /^docs\/\.cove-upload-[0-9a-f-]+\.part$/);
+});
+test('cleanup visits only registered objects and retains failed identity checks', async () => {
+  const { service, db } = harness();
+  const calls = [],
+    changes = [];
+  const rows = ['.cove-upload-', '.COVE-UPLOAD-'].map((prefix, i) => ({
+    id: String(i),
+    userId: 'u',
+    state: 'INTERRUPTED',
+    objectId: 'registered',
+    bindingVersion: 'v',
+    tempPath: `${prefix}x.part`,
+  }));
+  service.authorize = async () => ({ id: 'u' });
+  service.bindings.get = async () => ({ binding: { version: 'v' }, credentials: {} });
+  service.smb.call = async (_, input) => {
+    calls.push(input);
+    if (input.path.startsWith('.COVE-')) throw filesError('OBJECT_CHANGED');
+  };
+  db.downloadTicket = { deleteMany: async () => {} };
+  db.fileOperation = {
+    findMany: async (q) => (q.where.OR ? rows : []),
+    updateMany: async (q) => {
+      changes.push(q);
+    },
+    deleteMany: async () => {},
+  };
+  await service.sweep();
+  assert.equal(calls.length, 2);
+  assert(calls.every((c) => c.action === 'cleanup' && c.objectId === 'registered'));
+  assert(changes.some((c) => c.where.id === '0' && c.data.cleanupPending === false));
+  assert(!changes.some((c) => c.where.id === '1'));
 });

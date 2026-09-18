@@ -1,6 +1,6 @@
 import type { ConfigService } from '@nestjs/config';
 
-const DEVELOPMENT_SECRET = 'home-ops-development-only-secret-change-me';
+const DEVELOPMENT_SECRET = 'cove-development-only-secret-change-me';
 
 export function getJwtSecret(config: ConfigService): string {
   const secret = config.get<string>('JWT_SECRET');

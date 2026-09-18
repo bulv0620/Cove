@@ -19,4 +19,4 @@ export type {
   UpdateResourceActionRequest,
   UpdateRoleRequest,
   UpdateUserProfileRequest,
-} from '@home-ops/shared';
+} from '@cove/shared';

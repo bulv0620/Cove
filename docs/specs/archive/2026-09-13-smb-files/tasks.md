@@ -51,7 +51,7 @@
 - 2026-09-14 Files 多选检查：在真实 SMB 根目录的列表与图标视图验证普通点击、Ctrl/Cmd、Shift、显式选择按钮、Shift + 方向键、Ctrl/Cmd + A、Esc 和目录切换；选择数量、视觉状态、`aria-selected` 与下载可用性均符合 FILES-AC-014。
 - 2026-09-14 Files 删除/重命名检查：真实 SMB 目录验证文件 rename、同名不覆盖、文件与空目录删除、非空目录拒绝、批量部分成功、失败保留选择和完整清理；F2、Delete、右键与 375px 弹窗通过，浏览器无运行时错误。RBAC seed 连续执行两次成功。
 - 2026-09-14 Files 类型图标检查：扩展名映射覆盖文档、PDF、表格、演示、图片、视频、音频、压缩包和代码，统一小写匹配并保留未知类型回退；真实 NAS `.mp4` 在浅色与深色主题下渲染为紫色视频胶片图标，目录保持蓝色文件夹图标。前端 lint、typecheck、build 和运行时错误检查通过。
-- `pnpm --filter @home-ops/server test`：16 项通过，新增同目录 rename、根路径/非法名称拒绝、删除权限、重复路径去重、批量部分失败、非空目录错误和快照失效覆盖。
+- `pnpm --filter @cove/server test`：16 项通过，新增同目录 rename、根路径/非法名称拒绝、删除权限、重复路径去重、批量部分失败、非空目录错误和快照失效覆盖。
 - `pnpm lint`、`pnpm typecheck`、`pnpm build`：通过。`pnpm format:check` 仍仅因本次未改动的既有文件 `apps/server/src/modules/access-control/dto/update-resource.dto.ts` 报格式问题；本次变更文件的 Prettier 写入及 `git diff --check` 通过。Vite 保留主 bundle 大于 500 KiB 的既有提示。
 - `apps/server/test/files-live.py`：提供可选真实 API smoke runner，凭据通过仓库外配置文件读取；脚本验证上传、下载、重命名、部分删除和空目录删除，并在成功后清理测试目录。
 - 最终编译产物重启后，重新登录、Files 状态及当前绑定根目录浏览均返回 200；文档相对链接和仓库凭据扫描通过，仓库外临时凭据文件已删除。

@@ -14,7 +14,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import type { AuthUser } from '@home-ops/shared';
+import type { AuthUser } from '@cove/shared';
 import type { Request, Response } from 'express';
 import { CurrentUser } from '../../core/decorators/current-user.decorator';
 import { RequirePermissions } from '../../core/decorators/require-permissions.decorator';

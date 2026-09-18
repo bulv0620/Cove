@@ -14,8 +14,8 @@ export function AuthProvider({ children }: PropsWithChildren): JSX.Element {
 
   useEffect(() => {
     const handleUnauthorized = (): void => refreshTokenState();
-    window.addEventListener('home-ops:unauthorized', handleUnauthorized);
-    return () => window.removeEventListener('home-ops:unauthorized', handleUnauthorized);
+    window.addEventListener('cove:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('cove:unauthorized', handleUnauthorized);
   }, []);
 
   const currentUser = useQuery({

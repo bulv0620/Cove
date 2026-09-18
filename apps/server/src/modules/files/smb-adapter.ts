@@ -4,7 +4,7 @@ import { once } from 'node:events';
 import { Readable, Writable } from 'node:stream';
 import { FilesConfig } from './files-config';
 import { filesError } from './files-policy';
-import type { FileEntry } from '@home-ops/shared';
+import type { FileEntry } from '@cove/shared';
 
 export interface SmbCredentials {
   username: string;

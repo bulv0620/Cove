@@ -1,4 +1,5 @@
-const TOKEN_KEY = 'home-ops.access-token';
+import { readStored, writeStored, clearStored } from '@/lib/storage';
+const TOKEN_KEY = 'cove.access-token';
 const API_BASE_URL = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') ?? '';
 
 interface NestErrorBody {
@@ -17,11 +18,11 @@ export class ApiError extends Error {
 }
 
 export const tokenStorage = {
-  get: (): string | null => localStorage.getItem(TOKEN_KEY),
-  set: (token: string): void => localStorage.setItem(TOKEN_KEY, token),
+  get: (): string | null => readStored(TOKEN_KEY),
+  set: (token: string): void => writeStored(TOKEN_KEY, token),
   clear: (): void => {
-    localStorage.removeItem(TOKEN_KEY);
-    window.dispatchEvent(new Event('home-ops:unauthorized'));
+    clearStored(TOKEN_KEY);
+    window.dispatchEvent(new Event('cove:unauthorized'));
   },
 };
 

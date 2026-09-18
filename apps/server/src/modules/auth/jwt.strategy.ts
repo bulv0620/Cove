@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
-import type { AuthUser } from '@home-ops/shared';
+import type { AuthUser } from '@cove/shared';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { getJwtSecret } from '../../core/config/jwt.config';
 import { AuthService } from './auth.service';

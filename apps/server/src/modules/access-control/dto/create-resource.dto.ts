@@ -9,7 +9,7 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
-import type { ResourceModuleCode } from '@home-ops/shared';
+import type { ResourceModuleCode } from '@cove/shared';
 
 const RESOURCE_MODULE_CODES: ResourceModuleCode[] = ['identity', 'infrastructure', 'system'];
 

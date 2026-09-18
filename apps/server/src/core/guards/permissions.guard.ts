@@ -1,6 +1,6 @@
 import { CanActivate, type ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import type { AuthUser } from '@home-ops/shared';
+import type { AuthUser } from '@cove/shared';
 import type { Request } from 'express';
 import { REQUIRED_PERMISSIONS_KEY } from '../decorators/require-permissions.decorator';
 import { REQUIRE_SUPER_ADMIN_KEY } from '../decorators/require-super-admin.decorator';

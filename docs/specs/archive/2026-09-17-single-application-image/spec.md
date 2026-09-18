@@ -43,7 +43,7 @@ updated: 2026-09-17
 - `IMG-FR-001`：必须通过一个多阶段 Dockerfile 构建唯一应用镜像，包含前端产物、后端、Prisma 运行与运维命令及 Python SMB 依赖；默认只启动一个 Node HTTP 服务，不运行 Nginx。
 - `IMG-FR-002`：必须在同一端口提供页面、静态资源与 `/api`；前端页面直接访问和刷新必须可用。`/api` 及其子路径必须始终由 API 处理，包括不存在的 API 和失败响应，不能返回 SPA 页面。
 - `IMG-FR-003`：静态服务必须仅暴露指定前端产物目录；缺失资源必须返回 404，不能返回 HTML 冒充脚本。SPA 兜底仅用于 GET/HEAD 页面导航，不得接管写请求。HTML 必须重新验证缓存；带内容哈希的资源可以长期缓存。
-- `IMG-FR-004`：Compose 必须移除独立 web 和 mysql 服务及数据库卷，保留 server 服务名并改用统一 `home-ops:${HOME_OPS_VERSION:-local}` 镜像；`WEB_PORT` 默认仍为 8080，映射至应用 3000 端口。数据库只能通过必填 `DATABASE_URL` 配置。
+- `IMG-FR-004`：Compose 必须移除独立 web 和 mysql 服务及数据库卷，保留 server 服务名并改用统一 `cove:${COVE_VERSION:-local}` 镜像；`WEB_PORT` 默认仍为 8080，映射至应用 3000 端口。数据库只能通过必填 `DATABASE_URL` 配置。
 - `IMG-FR-005`：migrate 与 bootstrap-admin 必须复用同一应用镜像，保留一次性命令、启动依赖和按服务注入环境变量的边界；migrate 必须直接连接外部数据库，迁移失败或数据库不可达必须阻止应用启动，管理员初始化必须保持显式执行。
 - `IMG-FR-006`：必须保持同源认证、授权和 Files 流式传输语义，包括大小限制、背压、空闲超时、取消和 Secure 下载 cookie；移除 Nginx 不得引入整文件缓冲或固定传输总时长限制。
 - `IMG-FR-007`：必须保持 Vite 开发服务器与独立 API 开发方式可用；开发后端缺少前端产物时仍可启动。统一生产镜像缺失入口文件时必须启动失败并给出不含密钥的错误。

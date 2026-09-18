@@ -1,5 +1,5 @@
 module.exports = {
-  extends: ['@home-ops/eslint-config/base.cjs'],
+  extends: ['@cove/eslint-config/base.cjs'],
   env: { node: true },
   parserOptions: {
     project: './tsconfig.json',

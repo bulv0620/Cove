@@ -1,5 +1,5 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
-import type { SystemStatus } from '@home-ops/shared';
+import type { SystemStatus } from '@cove/shared';
 import { RequireSuperAdmin } from '../../core/decorators/require-super-admin.decorator';
 import { JwtAuthGuard } from '../../core/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../../core/guards/permissions.guard';

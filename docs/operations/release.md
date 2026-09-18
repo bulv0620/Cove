@@ -30,7 +30,7 @@ fix(auth): reject expired sessions
 
 ## 当前发布现状
 
-仓库提供单应用镜像的 Compose 配置和手动部署、回滚流程，见 [`docker.md`](docker.md)。Web、Server 和 SMB 运行环境构建为一个 Home Ops 镜像，数据库通过 `DATABASE_URL` 连接外部 MySQL；数据库备份与恢复由外部数据库的维护流程负责。本机 clean-room 已通过，实际 NAS 与旧部署现场验证由维护者延期，见[归档验收记录](../specs/archive/2026-09-17-single-application-image/tasks.md)。自动化 production release 与 Git 版本 tag 发布流程尚未定义。
+仓库提供单应用镜像的 Compose 配置和手动部署、回滚流程，见 [`docker.md`](docker.md)。Web、Server 和 SMB 运行环境构建为一个 Cove 镜像，数据库通过 `DATABASE_URL` 连接外部 MySQL；数据库备份与恢复由外部数据库的维护流程负责。本机 clean-room 已通过，实际 NAS 与旧部署现场验证由维护者延期，见[归档验收记录](../specs/archive/2026-09-17-single-application-image/tasks.md)。自动化 production release 与 Git 版本 tag 发布流程尚未定义。
 
 ## 包含数据库迁移的发布
 

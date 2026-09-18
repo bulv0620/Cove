@@ -1,5 +1,5 @@
 {
-  "extends": "@home-ops/tsconfig/nestjs.json",
+  "extends": "@cove/tsconfig/nestjs.json",
   "compilerOptions": {
     "outDir": "./dist",
     "baseUrl": "./"

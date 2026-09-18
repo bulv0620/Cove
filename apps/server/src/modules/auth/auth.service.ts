@@ -1,12 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserStatus } from '../../generated/prisma/enums';
-import type {
-  AuthUser,
-  ChangePasswordRequest,
-  LoginRequest,
-  LoginResponse,
-} from '@home-ops/shared';
+import type { AuthUser, ChangePasswordRequest, LoginRequest, LoginResponse } from '@cove/shared';
 import argon2 from 'argon2';
 import { PermissionsService } from '../access-control/permissions.service';
 import { UsersService } from '../identity/users.service';
@@ -18,7 +13,7 @@ interface JwtPayload {
 
 @Injectable()
 export class AuthService {
-  private readonly dummyPasswordHash = argon2.hash('home-ops-invalid-password-sentinel', {
+  private readonly dummyPasswordHash = argon2.hash('cove-invalid-password-sentinel', {
     type: argon2.argon2id,
     memoryCost: 19_456,
     timeCost: 2,

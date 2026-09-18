@@ -11,12 +11,12 @@ COPY apps/web/package.json ./apps/web/package.json
 COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
 COPY packages/shared/package.json ./packages/shared/package.json
 COPY packages/tsconfig/package.json ./packages/tsconfig/package.json
-RUN pnpm install --frozen-lockfile --filter @home-ops/server... --filter @home-ops/web...
+RUN pnpm install --frozen-lockfile --filter @cove/server... --filter @cove/web...
 COPY packages ./packages
 COPY apps/server ./apps/server
 COPY apps/web ./apps/web
-RUN DATABASE_URL=mysql://build:build@localhost:3306/build pnpm --filter @home-ops/server build
-RUN pnpm --filter @home-ops/web build
+RUN DATABASE_URL=mysql://build:build@localhost:3306/build pnpm --filter @cove/server build
+RUN pnpm --filter @cove/web build
 
 FROM base AS runtime
 RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-venv \

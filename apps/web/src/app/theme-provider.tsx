@@ -1,3 +1,4 @@
+import { readStored, writeStored } from '@/lib/storage';
 import { createContext, useContext, useEffect, useState, type PropsWithChildren } from 'react';
 
 type Theme = 'light' | 'dark';
@@ -8,10 +9,10 @@ interface ThemeContextValue {
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
-const THEME_KEY = 'home-ops.theme';
+const THEME_KEY = 'cove.theme';
 
 function getInitialTheme(): Theme {
-  const stored = localStorage.getItem(THEME_KEY);
+  const stored = readStored(THEME_KEY);
   if (stored === 'light' || stored === 'dark') return stored;
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
@@ -21,7 +22,7 @@ export function ThemeProvider({ children }: PropsWithChildren): JSX.Element {
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
-    localStorage.setItem(THEME_KEY, theme);
+    writeStored(THEME_KEY, theme);
   }, [theme]);
 
   return (

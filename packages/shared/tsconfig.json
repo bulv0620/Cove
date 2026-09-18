@@ -1,5 +1,5 @@
 {
-  "extends": "@home-ops/tsconfig/base.json",
+  "extends": "@cove/tsconfig/base.json",
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",

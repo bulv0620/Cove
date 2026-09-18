@@ -2,6 +2,11 @@
 import { HttpException } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 
+export const UPLOAD_TEMP_PREFIX = '.cove-upload-';
+export function isTemporaryName(value: string): boolean {
+  return value.toLowerCase().startsWith(UPLOAD_TEMP_PREFIX);
+}
+
 const statuses: Record<string, number> = {
   INVALID_PATH: 400,
   INVALID_INPUT: 400,
@@ -59,7 +64,7 @@ export function fileName(value: unknown, allowTemporary = false): string {
     /[\\/:"<>|?*\u0000-\u001f\u007f]/u.test(value) ||
     /[. ]$/u.test(value) ||
     /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(value) ||
-    (!allowTemporary && value.toLowerCase().startsWith('.homeops-upload-'))
+    (!allowTemporary && isTemporaryName(value))
   )
     throw filesError('INVALID_PATH');
   return value;

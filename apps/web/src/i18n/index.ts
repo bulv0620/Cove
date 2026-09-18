@@ -1,15 +1,16 @@
+import { readStored, writeStored } from '@/lib/storage';
 import { filesEn, filesZh } from '@/features/files/messages';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
-const LANGUAGE_KEY = 'home-ops.language';
+const LANGUAGE_KEY = 'cove.language';
 
 const resources = {
   en: {
     translation: {
       files: filesEn,
       common: {
-        productSubtitle: 'Server Console',
+        productSubtitle: 'Personal Workspace',
         soon: 'Soon',
         retry: 'Retry',
         language: 'Language',
@@ -30,14 +31,13 @@ const resources = {
         status: 'Status',
       },
       auth: {
-        privateInfrastructure: 'Private infrastructure',
-        heroTitle: 'Your home server, under one roof.',
-        heroDescription:
-          'A focused control surface for the services, storage, and systems that run your home.',
-        localAccess: 'Local-first administrative access',
+        privateInfrastructure: 'Your private workspace',
+        heroTitle: 'A home for your everyday work.',
+        heroDescription: 'Your files and everyday workspace, hosted on your own NAS.',
+        localAccess: 'Local-first access',
         secureAccess: 'Secure access',
-        title: 'Sign in to Home Ops',
-        description: 'Use your administrator credentials to continue.',
+        title: 'Sign in to Cove',
+        description: 'Use your account to continue.',
         username: 'Username',
         usernamePlaceholder: 'Enter your username',
         password: 'Password',
@@ -61,9 +61,9 @@ const resources = {
           success: 'Password changed. Sign in again with your new password.',
           requiredTitle: 'Replace your temporary password',
           requiredDescription:
-            'Before continuing to Home Ops, verify the temporary password you just used and choose a private password.',
+            'Before continuing to Cove, verify the temporary password you just used and choose a private password.',
           requiredSecurityHint:
-            'Other Home Ops pages and protected APIs remain unavailable until this step is complete.',
+            'Other Cove pages and protected APIs remain unavailable until this step is complete.',
           errors: {
             mismatch: 'The new passwords do not match.',
             unchanged: 'The new password must be different from your current password.',
@@ -113,7 +113,7 @@ const resources = {
         welcome: 'Welcome back, {{username}}. Here is the current server state.',
         updated: 'Updated from local API',
         serverStatus: 'Server status',
-        connectivity: 'Connectivity to the Home Ops API',
+        connectivity: 'Connectivity to the Cove API',
         server: 'Server',
         online: 'Online',
         checking: 'Checking',
@@ -142,7 +142,7 @@ const resources = {
         create: 'Create user',
         createTitle: 'New user',
         createHint:
-          'Create a local Home Ops account and assign its initial roles. A temporary password will be generated after creation.',
+          'Create a local Cove account and assign its initial roles. A temporary password will be generated after creation.',
         search: 'Search users',
         count: '{{count}} users',
         loadError: 'Could not load users.',
@@ -219,7 +219,7 @@ const resources = {
       resources: {
         eyebrow: 'Access control',
         title: 'Resources',
-        description: 'Manage page resources and action permissions across every Home Ops module.',
+        description: 'Manage page resources and action permissions across every Cove module.',
         create: 'Create resource',
         empty: 'No resources available.',
         emptyFiltered: 'No resources match the current module and search.',
@@ -300,7 +300,7 @@ const resources = {
     translation: {
       files: filesZh,
       common: {
-        productSubtitle: '服务器控制台',
+        productSubtitle: '个人工作台',
         soon: '规划中',
         retry: '重试',
         language: '语言',
@@ -321,13 +321,13 @@ const resources = {
         status: '状态',
       },
       auth: {
-        privateInfrastructure: '私有基础设施',
-        heroTitle: '家庭服务器，尽在掌控。',
-        heroDescription: '专注管理家中运行的服务、存储与系统，保持清晰、高效和可靠。',
-        localAccess: '本地优先的管理访问',
+        privateInfrastructure: '你的私人空间',
+        heroTitle: '日常所需，尽在一处。',
+        heroDescription: '在自己的 NAS 上访问文件，打造属于自己的日常工作空间。',
+        localAccess: '本地优先的访问方式',
         secureAccess: '安全访问',
-        title: '登录 Home Ops',
-        description: '使用管理员凭据继续。',
+        title: '登录 Cove',
+        description: '使用你的账号继续。',
         username: '用户名',
         usernamePlaceholder: '请输入用户名',
         password: '密码',
@@ -349,9 +349,8 @@ const resources = {
           saving: '正在修改密码…',
           success: '密码修改成功，请使用新密码重新登录。',
           requiredTitle: '请修改临时密码',
-          requiredDescription:
-            '继续使用 Home Ops 前，请验证刚刚登录使用的临时密码，并设置私人密码。',
-          requiredSecurityHint: '完成此步骤前，其他 Home Ops 页面和受保护接口均不可访问。',
+          requiredDescription: '继续使用 Cove 前，请验证刚刚登录使用的临时密码，并设置私人密码。',
+          requiredSecurityHint: '完成此步骤前，其他 Cove 页面和受保护接口均不可访问。',
           errors: {
             mismatch: '两次输入的新密码不一致。',
             unchanged: '新密码不能与当前密码相同。',
@@ -401,7 +400,7 @@ const resources = {
         welcome: '欢迎回来，{{username}}。这是当前服务器状态。',
         updated: '数据来自本地 API',
         serverStatus: '服务器状态',
-        connectivity: 'Home Ops API 连接状态',
+        connectivity: 'Cove API 连接状态',
         server: '服务器',
         online: '在线',
         checking: '检查中',
@@ -428,7 +427,7 @@ const resources = {
         description: '创建本地账号、控制访问状态、分配全局角色并重置登录密码。',
         create: '创建用户',
         createTitle: '新建用户',
-        createHint: '创建 Home Ops 本地账号并分配初始角色，创建后系统会生成临时密码。',
+        createHint: '创建 Cove 本地账号并分配初始角色，创建后系统会生成临时密码。',
         search: '搜索用户',
         count: '共 {{count}} 个用户',
         loadError: '无法加载用户列表。',
@@ -495,7 +494,7 @@ const resources = {
       resources: {
         eyebrow: '访问控制',
         title: '资源管理',
-        description: '集中管理 Home Ops 各功能模块的页面资源及其操作权限。',
+        description: '集中管理 Cove 各功能模块的页面资源及其操作权限。',
         create: '创建资源',
         empty: '暂无可用资源。',
         emptyFiltered: '当前模块和搜索条件下没有匹配的资源。',
@@ -574,7 +573,7 @@ const resources = {
 } as const;
 
 function getInitialLanguage(): 'en' | 'zh-CN' {
-  const stored = localStorage.getItem(LANGUAGE_KEY);
+  const stored = readStored(LANGUAGE_KEY);
   if (stored === 'en' || stored === 'zh-CN') return stored;
   return navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
 }
@@ -589,7 +588,7 @@ void i18n.use(initReactI18next).init({
 
 function syncDocumentLanguage(language: string): void {
   document.documentElement.lang = language.startsWith('zh') ? 'zh-CN' : 'en';
-  localStorage.setItem(LANGUAGE_KEY, document.documentElement.lang);
+  writeStored(LANGUAGE_KEY, document.documentElement.lang);
 }
 
 syncDocumentLanguage(i18n.language);

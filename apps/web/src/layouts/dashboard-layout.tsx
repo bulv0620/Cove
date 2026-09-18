@@ -131,7 +131,7 @@ export function DashboardLayout(): JSX.Element {
           </Button>
           <div className="hidden items-center gap-2 text-sm text-muted-foreground sm:flex">
             <AppWindow className="h-4 w-4" aria-hidden="true" />
-            <span>Home Ops</span>
+            <span>Cove</span>
             <span>/</span>
             <span className="text-foreground">{t(currentPageKey)}</span>
           </div>

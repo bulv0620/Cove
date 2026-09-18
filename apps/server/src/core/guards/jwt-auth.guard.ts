@@ -5,7 +5,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import type { AuthUser } from '@home-ops/shared';
+import type { AuthUser } from '@cove/shared';
 import { AuthGuard } from '@nestjs/passport';
 import type { Request } from 'express';
 import { ALLOW_PASSWORD_CHANGE_REQUIRED_KEY } from '../decorators/allow-password-change-required.decorator';

@@ -1,10 +1,10 @@
-# Home Ops
+# Cove
 
-Personal NAS / Home Server Management Panel，面向长期维护与持续扩展的个人服务器统一管理面板。
+Your self-hosted personal workspace — 运行在 NAS 上的自托管个人工作台。
 
 ## 当前状态
 
-**Identity & Access Management Foundation**。当前包含 MySQL 持久化用户、JWT、全局 RBAC、用户与角色管理、权限驱动路由、审计日志和最小 Dashboard。
+**Identity & Access Management Foundation**。当前包含 MySQL 持久化用户、JWT、全局 RBAC、用户与角色管理、权限驱动路由、审计日志、最小 Dashboard 和 SMB 个人文件访问。图床、Markdown + Canvas 笔记、应用工具及定时 JS 脚本属于[功能规划](docs/product/roadmap.md)，尚未实现。
 
 ## 技术栈
 
@@ -19,7 +19,7 @@ Personal NAS / Home Server Management Panel，面向长期维护与持续扩展�
 
 ```text
 apps/
-  web/       React 管理面板
+  web/       React 个人工作台
   server/    NestJS API
 packages/
   shared/         少量前后端共享 API 类型
@@ -34,7 +34,7 @@ docs/             后续设计文档入口
 
 ## 安装
 
-Docker 部署见 [`docs/operations/docker.md`](docs/operations/docker.md)；从开发电脑导出镜像并传到威联通的完整流程见 [`docs/operations/nas-manual-deployment.md`](docs/operations/nas-manual-deployment.md)。生产构建使用一个 Home Ops 应用镜像，由 NestJS 同时提供前端页面和 API；Compose 通过环境变量连接外部 MySQL，不管理数据库容器。以下为本地开发方式。
+Docker 部署见 [`docs/operations/docker.md`](docs/operations/docker.md)；从开发电脑导出镜像并传到威联通的完整流程见 [`docs/operations/nas-manual-deployment.md`](docs/operations/nas-manual-deployment.md)。生产构建使用一个 Cove 应用镜像，由 NestJS 同时提供前端页面和 API；Compose 通过环境变量连接外部 MySQL，不管理数据库容器。以下为本地开发方式。
 
 项目固定使用 Node.js 22.14.0（Prisma 7 最低要求为 Node.js 20.19 / 22.12 / 24.0）：
 

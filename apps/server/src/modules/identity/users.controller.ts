@@ -17,7 +17,7 @@ import type {
   CreateUserResponse,
   ManagedUser,
   ResetPasswordResponse,
-} from '@home-ops/shared';
+} from '@cove/shared';
 import type { Request } from 'express';
 import { CurrentUser } from '../../core/decorators/current-user.decorator';
 import { RequirePermissions } from '../../core/decorators/require-permissions.decorator';

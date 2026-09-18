@@ -15,7 +15,7 @@ export const filesEn = {
   deleteTitle: 'Delete selected items?',
   deleteDescription: '{{count}} selected item(s) will be deleted.',
   deleteWarning:
-    'This action is permanent in Home Ops. Files and empty folders can be deleted; non-empty folders are kept.',
+    'This action is permanent in Cove. Files and empty folders can be deleted; non-empty folders are kept.',
   deleteConfirm: 'Delete permanently',
   deletePartial: '{{count}} item(s) could not be deleted. Review the errors and retry if needed.',
   refresh: 'Refresh',
@@ -153,7 +153,7 @@ export const filesZh = {
   deleting: '正在删除…',
   deleteTitle: '删除所选项目？',
   deleteDescription: '将删除 {{count}} 个所选项目。',
-  deleteWarning: '此操作在 Home Ops 中不可撤销。可以删除文件和空文件夹，非空文件夹会被保留。',
+  deleteWarning: '此操作在 Cove 中不可撤销。可以删除文件和空文件夹，非空文件夹会被保留。',
   deleteConfirm: '永久删除',
   deletePartial: '有 {{count}} 个项目未能删除，请查看错误后按需重试。',
   refresh: '刷新',

@@ -15,7 +15,7 @@ import type {
   ManagedUser,
   ResetPasswordResponse,
   UpdateUserProfileRequest,
-} from '@home-ops/shared';
+} from '@cove/shared';
 import argon2 from 'argon2';
 import { randomInt } from 'node:crypto';
 import { v7 as uuidv7 } from 'uuid';

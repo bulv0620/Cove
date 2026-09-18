@@ -38,7 +38,7 @@ def run(config):
     status, created, _ = request('/users', {'username': username, 'roleIds': [role]}, token=admin)
     assert status == 201, 'Cannot create test identity'
     user_id = created['user']['id']
-    root = 'HomeOps-live-' + uuid.uuid4().hex[:12]
+    root = 'Cove-live-' + uuid.uuid4().hex[:12]
     try:
         temporary = created['temporaryPassword']
         status, login, _ = request('/auth/login', {'username': username, 'password': temporary})
@@ -57,7 +57,7 @@ def run(config):
         assert not any(key in summary for key in ('password', 'ciphertext', 'nonce', 'authTag'))
         status, _, _ = request('/files/directories', {'parentPath': '', 'name': root}, token=token)
         assert status == 201
-        payload = b'Home Ops live streaming verification\n' * 4096
+        payload = b'Cove live streaming verification\n' * 4096
         name = 'Unicode-\u6d4b\u8bd5-%20.txt'
         for attempt in range(2):
             status, operation, _ = request('/files/uploads', {

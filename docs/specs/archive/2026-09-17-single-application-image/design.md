@@ -41,7 +41,7 @@ migrate 启动后直接通过 `DATABASE_URL` 连接外部 MySQL 并执行 migrat
 
 本地 pnpm dev、Vite 5173 → API 3000 和 apps/server/.env 入口保持不变。Compose 仍显式使用 `--env-file apps/server/.env`，统一镜像本轮仍由源码构建；纯拉取镜像部署及发布流水线另立 Spec。
 
-Compose 不包含 MySQL 服务或数据库卷。外部数据库必须兼容项目当前 MySQL 版本要求，并允许应用容器网络访问；`DATABASE_URL` 不能使用只指向容器自身的 `127.0.0.1`，应使用 NAS 地址、可解析主机名或外部 Docker 网络中的服务名。应用镜像命名为 home-ops，默认本地标签 local；实际升级使用唯一 HOME_OPS_VERSION。WEB_PORT 保持默认 8080，对外仅映射 server 的 3000，健康检查使用容器内部端口。
+Compose 不包含 MySQL 服务或数据库卷。外部数据库必须兼容项目当前 MySQL 版本要求，并允许应用容器网络访问；`DATABASE_URL` 不能使用只指向容器自身的 `127.0.0.1`，应使用 NAS 地址、可解析主机名或外部 Docker 网络中的服务名。应用镜像命名为 cove，默认本地标签 local；实际升级使用唯一 COVE_VERSION。WEB_PORT 保持默认 8080，对外仅映射 server 的 3000，健康检查使用容器内部端口。
 
 ## 迁移与兼容性
 

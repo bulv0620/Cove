@@ -1,3 +1,4 @@
+import { readStored, writeStored } from '@/lib/storage';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -39,7 +40,7 @@ import {
   Upload,
   type LucideIcon,
 } from 'lucide-react';
-import type { FileEntry } from '@home-ops/shared';
+import type { FileEntry } from '@cove/shared';
 import { filesApi, fileApiBase, fileSize } from '@/features/files/api';
 import { useTransfers } from '@/features/files/transfer-provider';
 import { useAuth } from '@/features/auth/hooks';
@@ -280,10 +281,8 @@ export function FilesPage(): JSX.Element {
     [sort, setSort] = useState('name'),
     [direction, setDirection] = useState('asc'),
     [hidden, setHidden] = useState(false);
-  const prefKey = `home-ops.files.view.${user?.id ?? ''}`;
-  const [view, setView] = useState(() =>
-    localStorage.getItem(prefKey) === 'grid' ? 'grid' : 'list',
-  );
+  const prefKey = `cove.files.view.${user?.id ?? ''}`;
+  const [view, setView] = useState(() => (readStored(prefKey) === 'grid' ? 'grid' : 'list'));
   const [selection, setSelection] = useState<FileEntry | null>(null),
     [details, setDetails] = useState(false),
     [treeOpen, setTreeOpen] = useState(false),
@@ -487,7 +486,7 @@ export function FilesPage(): JSX.Element {
     setView(next);
     setScrollTop(0);
     if (viewport.current) viewport.current.scrollTop = 0;
-    localStorage.setItem(prefKey, next);
+    writeStored(prefKey, next);
   };
   const columns = view === 'grid' ? Math.max(1, Math.floor(width / 150)) : 1;
   const rowHeight = view === 'grid' ? 142 : 56;

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { AuthUser } from '@home-ops/shared';
+import type { AuthUser } from '@cove/shared';
 import { PrismaService } from '../../database/prisma.service';
 import { PermissionStatus, RoleStatus, ScopeType, UserStatus } from '../../generated/prisma/enums';
 

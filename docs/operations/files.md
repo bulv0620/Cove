@@ -55,7 +55,7 @@ SMB_ENCRYPTION_REQUIRED=false
 
 ## Docker
 
-Home Ops 应用镜像已包含 `/opt/smb` Python 依赖；无需宿主机 CIFS 挂载、特权容器或 SMB 入站端口。Server 必须能够出站访问 NAS TCP 445，容器中的 localhost 不是 NAS。
+Cove 应用镜像已包含 `/opt/smb` Python 依赖；无需宿主机 CIFS 挂载、特权容器或 SMB 入站端口。Server 必须能够出站访问 NAS TCP 445，容器中的 localhost 不是 NAS。
 
 Compose 从既有 `apps/server/.env` 显式注入 SMB/Files 变量到 server 服务，不向 MySQL、迁移和管理员初始化服务注入 NAS 密钥。修改 env 后需重新创建容器，例如 `docker compose --env-file apps/server/.env up -d --force-recreate server`。
 
@@ -72,7 +72,7 @@ Compose 从既有 `apps/server/.env` 显式注入 SMB/Files 变量到 server 服
 ## 验证命令
 
 ```sh
-pnpm --filter @home-ops/server test
+pnpm --filter @cove/server test
 pnpm lint
 pnpm typecheck
 pnpm build

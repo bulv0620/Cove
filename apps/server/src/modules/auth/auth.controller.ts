@@ -1,5 +1,5 @@
 import { Body, Controller, Get, HttpCode, Post, Req, UseGuards } from '@nestjs/common';
-import type { AuthUser, LoginResponse } from '@home-ops/shared';
+import type { AuthUser, LoginResponse } from '@cove/shared';
 import type { Request } from 'express';
 import { AllowPasswordChangeRequired } from '../../core/decorators/allow-password-change-required.decorator';
 import { CurrentUser } from '../../core/decorators/current-user.decorator';

@@ -45,6 +45,10 @@ specs/
 
 ## 归档 Specs
 
+- [`2026-09-17-cove-rename`](archive/2026-09-17-cove-rename/spec.md)：Completed，维护者于 2026-09-18 验收通过并要求归档；统一 Cove 品牌并移除改名兼容逻辑。
+
+2026-09-17 按维护者要求，归档文档的品牌、包名与命令统一为 Cove 命名。历史日期与结果保持原记录；规范后的命令不是当时执行文本的逐字副本，也不代表重新运行验证。
+
 - [`2026-09-17-single-application-image`](archive/2026-09-17-single-application-image/spec.md)：Completed，合并 Web 与 Server 为单应用镜像，通过 env 连接外部 MySQL；维护者验收当前实现，实际 NAS 与旧部署现场验证明确延期。
 - [`2026-09-11-docker-deployment`](archive/2026-09-11-docker-deployment/spec.md)：维护者确认通过并于 2026-09-11 要求归档。配置已交付，完整容器验收受网络阻塞；保留 `In Progress` 状态及待验证记录。
 - [`2026-09-13-smb-files`](archive/2026-09-13-smb-files/spec.md)：维护者确认当前内容验收通过并于 2026-09-14 要求归档。SMB 个人目录、用户绑定与 Files 资源管理器已交付；Docker 完整运行验收按维护者要求延期。

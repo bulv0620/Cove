@@ -20,7 +20,7 @@ importers:
 
   apps/server:
     dependencies:
-      '@home-ops/shared':
+      '@cove/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       '@nestjs/common':
@@ -75,10 +75,10 @@ importers:
         specifier: ^11.1.0
         version: 11.1.1
     devDependencies:
-      '@home-ops/eslint-config':
+      '@cove/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
-      '@home-ops/tsconfig':
+      '@cove/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
       '@nestjs/cli':
@@ -117,7 +117,7 @@ importers:
 
   apps/web:
     dependencies:
-      '@home-ops/shared':
+      '@cove/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       '@radix-ui/react-select':
@@ -157,10 +157,10 @@ importers:
         specifier: ^3.0.1
         version: 3.6.0
     devDependencies:
-      '@home-ops/eslint-config':
+      '@cove/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
-      '@home-ops/tsconfig':
+      '@cove/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
       '@types/node':
@@ -223,10 +223,10 @@ importers:
 
   packages/shared:
     devDependencies:
-      '@home-ops/eslint-config':
+      '@cove/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@home-ops/tsconfig':
+      '@cove/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@typescript-eslint/eslint-plugin':

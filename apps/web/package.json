@@ -1,5 +1,5 @@
 {
-  "name": "@home-ops/web",
+  "name": "@cove/web",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -10,7 +10,7 @@
     "typecheck": "tsc -b --pretty false"
   },
   "dependencies": {
-    "@home-ops/shared": "workspace:*",
+    "@cove/shared": "workspace:*",
     "@radix-ui/react-select": "^2.3.7",
     "@radix-ui/react-slot": "^1.1.2",
     "@tanstack/react-query": "^5.66.8",
@@ -25,8 +25,8 @@
     "tailwind-merge": "^3.0.1"
   },
   "devDependencies": {
-    "@home-ops/eslint-config": "workspace:*",
-    "@home-ops/tsconfig": "workspace:*",
+    "@cove/eslint-config": "workspace:*",
+    "@cove/tsconfig": "workspace:*",
     "@types/node": "^22.13.4",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",

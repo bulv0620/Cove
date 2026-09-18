@@ -1,7 +1,7 @@
 /* eslint-disable no-control-regex -- Explicitly reject control characters in untrusted SMB input. */
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import type { AuthUser, SmbBindingSummary } from '@home-ops/shared';
+import type { AuthUser, SmbBindingSummary } from '@cove/shared';
 import { PrismaService } from '../../database/prisma.service';
 import { FilesConfig } from './files-config';
 import { SmbAdapter, type SmbCredentials } from './smb-adapter';

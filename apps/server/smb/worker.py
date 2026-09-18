@@ -21,6 +21,13 @@ from smbprotocol.file_info import (
 logging.disable(logging.CRITICAL)
 
 
+TEMP_PREFIX = '.cove-upload-'
+
+
+def is_temporary_name(name):
+    return name.lower().startswith(TEMP_PREFIX)
+
+
 def emit(**event):
     sys.stderr.write(json.dumps(event, ensure_ascii=True) + '\n')
     sys.stderr.flush()
@@ -159,8 +166,8 @@ def run(config):
             source_parts, target_parts = path_parts(path), path_parts(target)
             if (not source_parts or not target_parts or source_parts[:-1] != target_parts[:-1]
                     or source_parts == target_parts
-                    or source_parts[-1].lower().startswith('.homeops-upload-')
-                    or target_parts[-1].lower().startswith('.homeops-upload-')):
+                    or is_temporary_name(source_parts[-1])
+                    or is_temporary_name(target_parts[-1])):
                 raise ValueError('INVALID_PATH')
             handle = client.open(path, delete=True)
             identity = client.identity(handle)
@@ -173,7 +180,7 @@ def run(config):
             emit(result=result)
         elif action == 'delete':
             parts = path_parts(path)
-            if not parts or parts[-1].lower().startswith('.homeops-upload-'):
+            if not parts or is_temporary_name(parts[-1]):
                 raise ValueError('INVALID_PATH')
             handle = client.open(path, delete=True)
             info = FileDispositionInformation()
@@ -185,7 +192,7 @@ def run(config):
             handle = client.open(path, directory=False if action == 'read' else None, delete=action == 'cleanup')
             identity = client.identity(handle)
             if action == 'cleanup':
-                if identity != config['objectId'] or not path.split('/')[-1].startswith('.homeops-upload-'):
+                if identity != config['objectId'] or not is_temporary_name(path.split('/')[-1]):
                     raise ValueError('OBJECT_CHANGED')
                 info = FileDispositionInformation()
                 info['delete_pending'] = True
@@ -207,7 +214,7 @@ def run(config):
                 emit(result=dict(bytes=str(offset)))
         elif action == 'write':
             temp = config['tempPath']
-            if path_parts(temp)[:-1] != path_parts(path)[:-1] or not temp.split('/')[-1].startswith('.homeops-upload-'):
+            if path_parts(temp)[:-1] != path_parts(path)[:-1] or not is_temporary_name(temp.split('/')[-1]):
                 raise ValueError('INVALID_PATH')
             handle = client.open(temp, directory=False, create=True, write=True, delete=True)
             identity = client.identity(handle)
