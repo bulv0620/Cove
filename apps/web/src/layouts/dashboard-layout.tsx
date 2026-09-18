@@ -1,7 +1,8 @@
 import { ChevronRight, Menu, Moon, Sun, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
+import { PageSessionWorkspace } from '@/app/page-session-workspace';
 import { LanguageSwitcher } from '@/components/shared/language-switcher';
 import { Logo } from '@/components/shared/logo';
 import { Button } from '@/components/ui/button';
@@ -81,7 +82,7 @@ export function DashboardLayout(): JSX.Element {
   const currentPageKey =
     routedNavigationItems.find(({ to }) => to === location.pathname)?.translationKey ??
     'navigation.dashboard';
-  const isFilesPage = location.pathname === '/files';
+  const { user } = useAuth();
 
   return (
     <div className="min-h-dvh bg-background">
@@ -119,7 +120,7 @@ export function DashboardLayout(): JSX.Element {
       )}
 
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-10 flex h-16 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/85 sm:px-6 lg:px-8">
+        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/85 sm:px-6 lg:px-8">
           <Button
             variant="ghost"
             size="icon"
@@ -154,18 +155,7 @@ export function DashboardLayout(): JSX.Element {
             <UserMenu />
           </div>
         </header>
-        <main
-          id="main-content"
-          tabIndex={-1}
-          className={cn(
-            'w-full outline-none',
-            isFilesPage
-              ? 'h-[calc(100dvh-4rem)] max-w-none overflow-hidden'
-              : 'mx-auto max-w-[1440px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8',
-          )}
-        >
-          <Outlet />
-        </main>
+        <PageSessionWorkspace key={user?.id ?? 'anonymous'} />
       </div>
     </div>
   );

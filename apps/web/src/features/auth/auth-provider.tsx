@@ -13,10 +13,13 @@ export function AuthProvider({ children }: PropsWithChildren): JSX.Element {
   const hasToken = Boolean(tokenStorage.get());
 
   useEffect(() => {
-    const handleUnauthorized = (): void => refreshTokenState();
+    const handleUnauthorized = (): void => {
+      queryClient.clear();
+      refreshTokenState();
+    };
     window.addEventListener('cove:unauthorized', handleUnauthorized);
     return () => window.removeEventListener('cove:unauthorized', handleUnauthorized);
-  }, []);
+  }, [queryClient]);
 
   const currentUser = useQuery({
     queryKey: CURRENT_USER_KEY,
@@ -41,9 +44,8 @@ export function AuthProvider({ children }: PropsWithChildren): JSX.Element {
 
   const logout = (): void => {
     tokenStorage.clear();
-    queryClient.removeQueries({ queryKey: ['files'] });
-    queryClient.removeQueries({ queryKey: ['smb-binding'] });
-    queryClient.removeQueries({ queryKey: CURRENT_USER_KEY });
+    queryClient.clear();
+    refreshTokenState();
   };
 
   void tokenRevision;

@@ -9,18 +9,19 @@ import {
   Users,
   type LucideIcon,
 } from 'lucide-react';
-import type { ReactNode } from 'react';
+import type { ComponentType } from 'react';
 import { DashboardPage } from '@/pages/dashboard/dashboard-page';
 import { ResourcesPage } from '@/pages/resources/resources-page';
 import { RolesPage } from '@/pages/roles/roles-page';
 import { UsersPage } from '@/pages/users/users-page';
 
 export interface NavigationItem {
+  id: string;
   translationKey: string;
   icon: LucideIcon;
   to: string;
   pagePermission?: string;
-  element: ReactNode;
+  component: ComponentType;
 }
 
 export interface NavigationGroup {
@@ -33,10 +34,11 @@ export const navigationGroups: NavigationGroup[] = [
     translationKey: 'navigation.overview',
     items: [
       {
+        id: 'dashboard',
         translationKey: 'navigation.dashboard',
         icon: LayoutDashboard,
         to: '/',
-        element: <DashboardPage />,
+        component: DashboardPage,
       },
     ],
   },
@@ -44,25 +46,28 @@ export const navigationGroups: NavigationGroup[] = [
     translationKey: 'navigation.identity',
     items: [
       {
+        id: 'users',
         translationKey: 'navigation.users',
         icon: Users,
         to: '/users',
         pagePermission: 'identity.user.page',
-        element: <UsersPage />,
+        component: UsersPage,
       },
       {
+        id: 'roles',
         translationKey: 'navigation.roles',
         icon: ShieldCheck,
         to: '/roles',
         pagePermission: 'identity.role.page',
-        element: <RolesPage />,
+        component: RolesPage,
       },
       {
+        id: 'resources',
         translationKey: 'navigation.resources',
         icon: Layers,
         to: '/resources',
         pagePermission: 'identity.resource.page',
-        element: <ResourcesPage />,
+        component: ResourcesPage,
       },
     ],
   },
@@ -70,18 +75,20 @@ export const navigationGroups: NavigationGroup[] = [
     translationKey: 'navigation.infrastructure',
     items: [
       {
+        id: 'files',
         translationKey: 'navigation.files',
         icon: FileStack,
         to: '/files',
         pagePermission: 'infra.files.page',
-        element: <FilesPage />,
+        component: FilesPage,
       },
       {
+        id: 'images',
         translationKey: 'navigation.images',
         icon: Images,
         to: '/images',
         pagePermission: 'infra.images.page',
-        element: <ImagesPage />,
+        component: ImagesPage,
       },
     ],
   },

@@ -27,9 +27,9 @@ React Web ──────────► NestJS Server ───────�
                          └──── Python SMB worker ──► NAS home
 ```
 
-- Web 负责页面路由、交互状态、国际化和权限可见性。
+- Web 负责页面路由、内存页面会话、交互状态、国际化和权限可见性。工作台按顶级 routeId 保持一个挂载实例，活动 URL 仍由 React Router 与权限守卫决定；稳定行为见[页面会话标签](../behavior/page-sessions.md)。
 - Server 是认证、授权、业务规则和外部副作用的唯一可信入口。
-- Prisma/MySQL 保存长期业务状态；浏览器本地存储仅保存访问令牌和界面偏好。
+- Prisma/MySQL 保存长期业务状态；浏览器本地存储仅保存访问令牌和界面偏好。页面会话、表单草稿和组件树不持久化，刷新或认证边界变化会释放。
 - `packages/shared` 只放稳定且确有前后端共享价值的契约，不能成为业务逻辑容器。
 
 ## 模块边界

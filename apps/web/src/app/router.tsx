@@ -39,6 +39,10 @@ function PermissionRoute({ permission }: { permission: string }): JSX.Element {
   return allowed ? <Outlet /> : <Navigate to="/" replace />;
 }
 
+function WorkspaceRoute(): null {
+  return null;
+}
+
 export const router = createBrowserRouter([
   {
     element: <PublicOnlyRoute />,
@@ -60,9 +64,9 @@ export const router = createBrowserRouter([
               item.pagePermission
                 ? {
                     element: <PermissionRoute permission={item.pagePermission} />,
-                    children: [{ path: item.to, element: item.element }],
+                    children: [{ path: item.to, element: <WorkspaceRoute /> }],
                   }
-                : { path: item.to, element: item.element },
+                : { path: item.to, element: <WorkspaceRoute /> },
             ),
           },
         ],

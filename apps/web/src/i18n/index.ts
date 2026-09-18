@@ -101,6 +101,10 @@ const resources = {
         openMenu: 'Open navigation menu',
         closeMenu: 'Close navigation menu',
         closeNavigation: 'Close navigation',
+        pageSessions: 'Open pages',
+        closePageSession: 'Close {{page}}',
+        scrollTabsBack: 'Scroll page tabs backward',
+        scrollTabsForward: 'Scroll page tabs forward',
       },
       header: {
         administrator: 'Administrator',
@@ -391,6 +395,10 @@ const resources = {
         openMenu: '打开导航菜单',
         closeMenu: '关闭导航菜单',
         closeNavigation: '关闭导航',
+        pageSessions: '已打开页面',
+        closePageSession: '关闭{{page}}',
+        scrollTabsBack: '向前滚动页面标签',
+        scrollTabsForward: '向后滚动页面标签',
       },
       header: {
         administrator: '管理员',

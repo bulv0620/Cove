@@ -44,6 +44,7 @@ import type { FileEntry } from '@cove/shared';
 import { filesApi, fileApiBase, fileSize } from '@/features/files/api';
 import { useTransfers } from '@/features/files/transfer-provider';
 import { useAuth } from '@/features/auth/hooks';
+import { usePageSessionActivity } from '@/app/page-session-activity';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Modal } from '@/components/ui/modal';
@@ -276,6 +277,7 @@ export function FilesPage(): JSX.Element {
   const path = params.get('path') ?? '';
   const cache = useQueryClient();
   const transfers = useTransfers();
+  const sessionActive = usePageSessionActivity();
   const [search, setSearch] = useState(''),
     [filter, setFilter] = useState(''),
     [sort, setSort] = useState('name'),
@@ -340,9 +342,9 @@ export function FilesPage(): JSX.Element {
   const recent = useQuery({
     queryKey: ['files', user?.id, 'recent'],
     queryFn: filesApi.recent,
-    enabled: queueOpen,
+    enabled: queueOpen && sessionActive,
     retry: false,
-    refetchInterval: queueOpen ? 3000 : false,
+    refetchInterval: queueOpen && sessionActive ? 3000 : false,
   });
   const entries = useMemo(
     () => query.data?.pages.flatMap((page) => page.entries) ?? [],
@@ -382,23 +384,23 @@ export function FilesPage(): JSX.Element {
   }, [entries]);
   useEffect(() => {
     const element = viewport.current;
-    if (!element) return;
+    if (!element || !sessionActive) return;
     const observer = new ResizeObserver(() => {
       setWidth(element.clientWidth);
       setHeight(element.clientHeight);
     });
     observer.observe(element);
     return () => observer.disconnect();
-  }, [available]);
+  }, [available, sessionActive]);
   useEffect(() => {
-    if (!menu) return;
+    if (!menu || !sessionActive) return;
     menuRef.current?.focus();
     const dismiss = () => setMenu(null);
     document.addEventListener('click', dismiss);
     return () => document.removeEventListener('click', dismiss);
-  }, [menu]);
+  }, [menu, sessionActive]);
   useEffect(() => {
-    if (!treeOpen) return;
+    if (!treeOpen || !sessionActive) return;
     const dismiss = (event: PointerEvent) => {
       if (!treePopoverRef.current?.contains(event.target as Node)) setTreeOpen(false);
     };
@@ -411,7 +413,7 @@ export function FilesPage(): JSX.Element {
       document.removeEventListener('pointerdown', dismiss);
       document.removeEventListener('keydown', escape);
     };
-  }, [treeOpen]);
+  }, [treeOpen, sessionActive]);
   const open = (next: string) => {
     setParams(next ? { path: next } : {});
     setTreeOpen(false);

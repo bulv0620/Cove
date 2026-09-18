@@ -1,6 +1,7 @@
 import { X } from 'lucide-react';
 import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { usePageSessionActivity } from '@/app/page-session-activity';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -19,6 +20,8 @@ export function Modal({
   children: ReactNode;
   className?: string;
 }): JSX.Element | null {
+  const sessionActive = usePageSessionActivity();
+  const visible = open && sessionActive;
   const titleId = useId();
   const descriptionId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -29,7 +32,7 @@ export function Modal({
   }, [onClose]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!visible) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     const previousFocus = document.activeElement as HTMLElement | null;
@@ -68,9 +71,9 @@ export function Modal({
       document.removeEventListener('keydown', onKeyDown);
       previousFocus?.focus();
     };
-  }, [open]);
+  }, [visible]);
 
-  if (!open) return null;
+  if (!visible) return null;
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-6">
       <button
