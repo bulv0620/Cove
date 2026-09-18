@@ -1,4 +1,12 @@
-import { CheckCircle2, Eye, EyeOff, LoaderCircle, LockKeyhole, ShieldCheck } from 'lucide-react';
+import {
+  ArrowRight,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  LoaderCircle,
+  LockKeyhole,
+  ShieldCheck,
+} from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
@@ -72,123 +80,126 @@ export function LoginPage(): JSX.Element {
   };
 
   return (
-    <main className="grid min-h-dvh bg-card lg:grid-cols-[minmax(0,1fr)_minmax(480px,0.72fr)]">
-      <section className="relative hidden overflow-hidden border-r bg-slate-950 text-slate-100 lg:flex lg:flex-col lg:justify-between lg:p-12 xl:p-16">
-        <div className="absolute inset-0 opacity-30 [background-image:linear-gradient(rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.08)_1px,transparent_1px)] [background-size:48px_48px]" />
-        <Logo className="relative [&_span:first-child]:bg-blue-500" />
-        <div className="relative max-w-xl">
-          <p className="mb-5 font-mono text-xs uppercase tracking-[0.2em] text-blue-300">
-            {t('auth.privateInfrastructure')}
-          </p>
-          <h1 className="text-4xl font-semibold tracking-tight xl:text-5xl">
-            {t('auth.heroTitle')}
-          </h1>
-          <p className="mt-6 max-w-lg text-base leading-7 text-slate-300">
-            {t('auth.heroDescription')}
-          </p>
-        </div>
-        <div className="relative flex items-center gap-3 text-sm text-slate-400">
-          <ShieldCheck className="h-4 w-4 text-emerald-400" aria-hidden="true" />
-          {t('auth.localAccess')}
-        </div>
-      </section>
+    <main className="relative isolate flex min-h-dvh flex-col bg-background">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[32rem] bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.06),transparent_70%)]"
+      />
+      <header className="flex items-center justify-between gap-4 px-6 py-5 sm:px-10 sm:py-7">
+        <Logo />
+        <LanguageSwitcher className="rounded-full text-muted-foreground" />
+      </header>
 
-      <section className="relative flex min-h-dvh items-center justify-center bg-background px-5 py-10 sm:px-8">
-        <LanguageSwitcher className="absolute right-4 top-4 sm:right-6 sm:top-6" />
-        <div className="w-full max-w-sm">
-          <Logo className="mb-12 lg:hidden" />
-          <div className="mb-8">
-            <p className="mb-2 font-mono text-xs uppercase tracking-[0.18em] text-primary">
-              {t('auth.secureAccess')}
+      <section
+        className="flex flex-1 items-center justify-center px-5 py-10 sm:px-8 sm:py-14"
+        aria-labelledby="login-title"
+      >
+        <div className="w-full max-w-[420px]">
+          <div className="mb-8 text-center">
+            <p className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+              {t('auth.heroTitle')}
             </p>
-            <h2 className="text-2xl font-semibold tracking-tight">{t('auth.title')}</h2>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">{t('auth.description')}</p>
+            <h1 id="login-title" className="text-3xl font-semibold tracking-tight sm:text-[2rem]">
+              {t('auth.title')}
+            </h1>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">{t('auth.description')}</p>
           </div>
 
-          <form className="space-y-5" onSubmit={(event) => void handleSubmit(event)} noValidate>
-            {searchParams.get('passwordChanged') === '1' && (
-              <div
-                role="status"
-                className="flex gap-3 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-3 text-sm text-emerald-700 dark:text-emerald-300"
-              >
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                <span>{t('auth.changePassword.success')}</span>
-              </div>
-            )}
-            <div className="space-y-2">
-              <label htmlFor="username" className="text-sm font-medium">
-                {t('auth.username')}
-              </label>
-              <Input
-                id="username"
-                name="username"
-                autoComplete="username"
-                autoFocus
-                required
-                value={username}
-                onChange={(event) => setUsername(event.target.value)}
-                placeholder={t('auth.usernamePlaceholder')}
-                aria-invalid={Boolean(displayedError)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">
-                {t('auth.password')}
-              </label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  placeholder={t('auth.passwordPlaceholder')}
-                  className="pr-12"
-                  aria-invalid={Boolean(displayedError)}
-                  aria-describedby={displayedError ? 'login-error' : undefined}
-                />
-                <button
-                  type="button"
-                  className="absolute right-0 top-0 flex h-11 w-11 cursor-pointer items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-                  onClick={() => setShowPassword((value) => !value)}
-                  aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+          <div className="rounded-2xl border border-border/70 bg-card p-6 shadow-[0_8px_32px_-16px_hsl(var(--foreground)/0.12)] sm:p-8">
+            <form className="space-y-6" onSubmit={(event) => void handleSubmit(event)} noValidate>
+              {searchParams.get('passwordChanged') === '1' && (
+                <div
+                  role="status"
+                  className="flex gap-3 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-3 text-sm text-emerald-700 dark:text-emerald-300"
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-            </div>
-
-            {displayedError && (
-              <div
-                id="login-error"
-                role={retryAfterSeconds === null ? 'alert' : 'status'}
-                className="flex gap-3 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-3 text-sm text-destructive"
-              >
-                <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                <span>{displayedError}</span>
-              </div>
-            )}
-
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isSubmitting || retryAfterSeconds !== null || !username || !password}
-            >
-              {isSubmitting && (
-                <LoaderCircle className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span>{t('auth.changePassword.success')}</span>
+                </div>
               )}
-              {isSubmitting ? t('auth.signingIn') : t('auth.signIn')}
-            </Button>
-          </form>
+              <div className="space-y-2">
+                <label htmlFor="username" className="text-sm font-medium">
+                  {t('auth.username')}
+                </label>
+                <Input
+                  id="username"
+                  name="username"
+                  autoComplete="username"
+                  className="h-12 rounded-lg bg-background/60 px-3.5"
+                  autoFocus
+                  required
+                  value={username}
+                  onChange={(event) => setUsername(event.target.value)}
+                  placeholder={t('auth.usernamePlaceholder')}
+                  aria-invalid={Boolean(displayedError)}
+                />
+              </div>
 
-          <p className="mt-8 text-center text-xs leading-5 text-muted-foreground">
-            {t('auth.developmentNote')}
+              <div className="space-y-2">
+                <label htmlFor="password" className="text-sm font-medium">
+                  {t('auth.password')}
+                </label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    required
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder={t('auth.passwordPlaceholder')}
+                    className="h-12 rounded-lg bg-background/60 pl-3.5 pr-12"
+                    aria-invalid={Boolean(displayedError)}
+                    aria-describedby={displayedError ? 'login-error' : undefined}
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-0 top-0 flex h-12 w-12 cursor-pointer items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                    onClick={() => setShowPassword((value) => !value)}
+                    aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {displayedError && (
+                <div
+                  id="login-error"
+                  role={retryAfterSeconds === null ? 'alert' : 'status'}
+                  className="flex gap-3 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-3 text-sm text-destructive"
+                >
+                  <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span>{displayedError}</span>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                className="h-12 w-full gap-2 rounded-lg"
+                disabled={isSubmitting || retryAfterSeconds !== null || !username || !password}
+              >
+                {isSubmitting && (
+                  <LoaderCircle className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                )}
+                {isSubmitting ? t('auth.signingIn') : t('auth.signIn')}
+                {!isSubmitting && <ArrowRight className="h-4 w-4" aria-hidden="true" />}
+              </Button>
+            </form>
+          </div>
+          <p className="mt-6 flex items-center justify-center gap-2 text-xs leading-5 text-muted-foreground">
+            <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+            {t('auth.localAccess')}
           </p>
         </div>
       </section>
+      <footer className="px-6 pb-6 pt-2 text-center text-xs leading-5 text-muted-foreground">
+        Cove{' '}
+        <span aria-hidden="true" className="mx-2">
+          /
+        </span>{' '}
+        {t('common.productSubtitle')}
+      </footer>
     </main>
   );
 }
