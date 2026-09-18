@@ -1,4 +1,4 @@
-import { AppWindow, ChevronRight, Menu, Moon, Sun, X } from 'lucide-react';
+import { ChevronRight, Menu, Moon, Sun, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
@@ -130,7 +130,12 @@ export function DashboardLayout(): JSX.Element {
             <Menu className="h-5 w-5" />
           </Button>
           <div className="hidden items-center gap-2 text-sm text-muted-foreground sm:flex">
-            <AppWindow className="h-4 w-4" aria-hidden="true" />
+            <img
+              src="/icons/cove-icon-192.png"
+              alt=""
+              aria-hidden="true"
+              className="h-4 w-4 rounded"
+            />
             <span>Cove</span>
             <span>/</span>
             <span className="text-foreground">{t(currentPageKey)}</span>
