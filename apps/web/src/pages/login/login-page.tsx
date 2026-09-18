@@ -1,5 +1,5 @@
 import { CheckCircle2, Eye, EyeOff, LoaderCircle, LockKeyhole, ShieldCheck } from 'lucide-react';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { LanguageSwitcher } from '@/components/shared/language-switcher';
@@ -20,6 +20,23 @@ export function LoginPage(): JSX.Element {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [rateLimitUntil, setRateLimitUntil] = useState<number | null>(null);
+  const [retryAfterSeconds, setRetryAfterSeconds] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (rateLimitUntil === null) return;
+    const update = (): void => {
+      const remaining = Math.max(0, Math.ceil((rateLimitUntil - Date.now()) / 1000));
+      setRetryAfterSeconds(remaining || null);
+      if (remaining === 0) setRateLimitUntil(null);
+    };
+    update();
+    const timer = window.setInterval(update, 250);
+    return () => window.clearInterval(timer);
+  }, [rateLimitUntil]);
+
+  const displayedError =
+    retryAfterSeconds === null ? error : t('auth.errors.rateLimited', { count: retryAfterSeconds });
 
   if (isAuthenticated)
     return <Navigate to={user?.mustChangePassword ? '/change-password' : '/'} replace />;
@@ -36,6 +53,14 @@ export function LoginPage(): JSX.Element {
     } catch (caught) {
       if (caught instanceof ApiError && caught.status === 401) {
         setError(t('auth.errors.invalidCredentials'));
+      } else if (
+        caught instanceof ApiError &&
+        caught.status === 429 &&
+        caught.code === 'AUTH_RATE_LIMITED'
+      ) {
+        const seconds = caught.retryAfterSeconds ?? 1;
+        setRateLimitUntil(Date.now() + seconds * 1000);
+        setRetryAfterSeconds(seconds);
       } else if (caught instanceof ApiError && caught.status === 0) {
         setError(t('auth.errors.serverUnavailable'));
       } else {
@@ -103,7 +128,7 @@ export function LoginPage(): JSX.Element {
                 value={username}
                 onChange={(event) => setUsername(event.target.value)}
                 placeholder={t('auth.usernamePlaceholder')}
-                aria-invalid={Boolean(error)}
+                aria-invalid={Boolean(displayedError)}
               />
             </div>
 
@@ -122,8 +147,8 @@ export function LoginPage(): JSX.Element {
                   onChange={(event) => setPassword(event.target.value)}
                   placeholder={t('auth.passwordPlaceholder')}
                   className="pr-12"
-                  aria-invalid={Boolean(error)}
-                  aria-describedby={error ? 'login-error' : undefined}
+                  aria-invalid={Boolean(displayedError)}
+                  aria-describedby={displayedError ? 'login-error' : undefined}
                 />
                 <button
                   type="button"
@@ -136,21 +161,21 @@ export function LoginPage(): JSX.Element {
               </div>
             </div>
 
-            {error && (
+            {displayedError && (
               <div
                 id="login-error"
-                role="alert"
+                role={retryAfterSeconds === null ? 'alert' : 'status'}
                 className="flex gap-3 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-3 text-sm text-destructive"
               >
                 <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                <span>{error}</span>
+                <span>{displayedError}</span>
               </div>
             )}
 
             <Button
               type="submit"
               className="w-full"
-              disabled={isSubmitting || !username || !password}
+              disabled={isSubmitting || retryAfterSeconds !== null || !username || !password}
             >
               {isSubmitting && (
                 <LoaderCircle className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />

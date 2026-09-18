@@ -72,6 +72,7 @@ const resources = {
         },
         errors: {
           invalidCredentials: 'Invalid username or password.',
+          rateLimited: 'Too many sign-in attempts. Try again in {{count}} seconds.',
           serverUnavailable: 'Unable to reach the server. Check that it is running and try again.',
           generic: 'Sign in failed. Please try again.',
         },
@@ -359,6 +360,7 @@ const resources = {
         },
         errors: {
           invalidCredentials: '用户名或密码错误。',
+          rateLimited: '登录尝试过多，请在 {{count}} 秒后重试。',
           serverUnavailable: '无法连接服务器，请确认服务已启动后重试。',
           generic: '登录失败，请重试。',
         },

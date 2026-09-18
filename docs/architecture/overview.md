@@ -51,6 +51,8 @@ FilesModule 已通过独立 Python SMB 协议进程连接 NAS。凭据采用 AES
 - 页面权限控制路由和导航可见性；动作权限控制创建、更新、部署、重载等操作。
 - `isSuperAdmin` 是平台级绕过机制，不等同于普通角色。
 - Server 必须独立执行授权，前端隐藏按钮不能替代后端鉴权。
+- 登录入口在 Argon2id 前通过 MySQL 原子预留用户名与来源 IP 的校验额度；失败计数、递增冷却和短期预留跨重启、跨进程共享。可信代理未配置时只使用直接连接地址。
+- 限流键通过 `JWT_SECRET` 的独立上下文派生 HMAC；未知用户名在审计中使用另一独立上下文的截断指纹。密码、token、原始未知用户名和派生密钥不进入审计。
 
 稳定的用户行为见 [`../behavior/identity-and-access.md`](../behavior/identity-and-access.md)。
 

@@ -45,6 +45,11 @@ enum AuditResult {
   FAILURE
 }
 
+enum AuthLoginThrottleScope {
+  USERNAME
+  IP
+}
+
 model User {
   id                 String              @id @db.Char(36)
   username           String              @unique(map: "users_username_key") @db.VarChar(64)
@@ -165,6 +170,38 @@ model AuditLog {
   @@index([actorUserId, createdAt])
   @@index([targetType, targetId, createdAt])
   @@map("audit_logs")
+}
+
+model AuthLoginThrottle {
+  scopeType       AuthLoginThrottleScope @map("scope_type")
+  keyHash         String                 @map("key_hash") @db.Char(64)
+  failureCount    Int                    @default(0) @map("failure_count")
+  cooldownLevel   Int                    @default(0) @map("cooldown_level")
+  windowStartedAt DateTime?              @map("window_started_at") @db.DateTime(3)
+  lastFailureAt   DateTime?              @map("last_failure_at") @db.DateTime(3)
+  cooldownUntil   DateTime?              @map("cooldown_until") @db.DateTime(3)
+  blockedAttempts Int                    @default(0) @map("blocked_attempts")
+  limitedAuditAt  DateTime?              @map("limited_audit_at") @db.DateTime(3)
+  createdAt       DateTime               @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt       DateTime               @updatedAt @map("updated_at") @db.DateTime(3)
+
+  @@id([scopeType, keyHash])
+  @@index([lastFailureAt])
+  @@index([cooldownUntil])
+  @@map("auth_login_throttles")
+}
+
+model AuthLoginVerificationReservation {
+  id              String   @id @db.Char(36)
+  usernameKeyHash String   @map("username_key_hash") @db.Char(64)
+  ipKeyHash       String   @map("ip_key_hash") @db.Char(64)
+  createdAt       DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  expiresAt       DateTime @map("expires_at") @db.DateTime(3)
+
+  @@index([usernameKeyHash, expiresAt], map: "auth_login_res_username_expires_idx")
+  @@index([ipKeyHash, expiresAt], map: "auth_login_res_ip_expires_idx")
+  @@index([expiresAt], map: "auth_login_res_expires_idx")
+  @@map("auth_login_verification_reservations")
 }
 
 model PasswordCredential {

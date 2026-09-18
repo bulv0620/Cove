@@ -45,6 +45,7 @@ specs/
 
 ## 归档 Specs
 
+- [`2026-09-18-login-brute-force-protection`](archive/2026-09-18-login-brute-force-protection/spec.md)：Completed，维护者于 2026-09-18 验收通过并要求归档；实现 IP + 用户名登录限流、递增冷却、统一 429 响应和安全审计。
 - [`2026-09-17-cove-rename`](archive/2026-09-17-cove-rename/spec.md)：Completed，维护者于 2026-09-18 验收通过并要求归档；统一 Cove 品牌并移除改名兼容逻辑。
 
 2026-09-17 按维护者要求，归档文档的品牌、包名与命令统一为 Cove 命名。历史日期与结果保持原记录；规范后的命令不是当时执行文本的逐字副本，也不代表重新运行验证。

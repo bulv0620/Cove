@@ -5,12 +5,16 @@ const API_BASE_URL = (import.meta.env.VITE_API_URL as string | undefined)?.repla
 interface NestErrorBody {
   message?: string | string[];
   error?: string;
+  code?: string;
+  retryAfterSeconds?: number;
 }
 
 export class ApiError extends Error {
   constructor(
     message: string,
     readonly status: number,
+    readonly code?: string,
+    readonly retryAfterSeconds?: number,
   ) {
     super(message);
     this.name = 'ApiError';
@@ -35,9 +39,17 @@ async function parseError(response: Response): Promise<ApiError> {
   }
 
   const details = Array.isArray(body.message) ? body.message.join(' ') : body.message;
+  const retryAfterHeader = Number(response.headers.get('Retry-After'));
+  const retryAfterSeconds =
+    typeof body.retryAfterSeconds === 'number' && Number.isFinite(body.retryAfterSeconds)
+      ? Math.max(1, Math.ceil(body.retryAfterSeconds))
+      : Number.isFinite(retryAfterHeader) && retryAfterHeader > 0
+        ? Math.ceil(retryAfterHeader)
+        : undefined;
   const fallback: Record<number, string> = {
     400: 'Please check the submitted information.',
     401: 'Your session is invalid or has expired.',
+    429: 'Too many requests. Try again later.',
     404: 'The requested resource was not found.',
     500: 'The server encountered an unexpected error.',
   };
@@ -45,6 +57,8 @@ async function parseError(response: Response): Promise<ApiError> {
   return new ApiError(
     details ?? fallback[response.status] ?? 'The request could not be completed.',
     response.status,
+    body.code,
+    retryAfterSeconds,
   );
 }
 

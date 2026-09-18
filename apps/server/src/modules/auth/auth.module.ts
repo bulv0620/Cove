@@ -7,7 +7,10 @@ import { AccessControlModule } from '../access-control/access-control.module';
 import { IdentityModule } from '../identity/identity.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { ClientIpService } from './client-ip.service';
 import { JwtStrategy } from './jwt.strategy';
+import { LoginThrottleConfig } from './login-throttle.config';
+import { LoginThrottleService } from './login-throttle.service';
 
 @Module({
   imports: [
@@ -23,6 +26,6 @@ import { JwtStrategy } from './jwt.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, LoginThrottleConfig, LoginThrottleService, ClientIpService],
 })
 export class AuthModule {}

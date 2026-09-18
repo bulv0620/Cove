@@ -5,6 +5,8 @@ import type { AuthUser, ChangePasswordRequest, LoginRequest, LoginResponse } fro
 import argon2 from 'argon2';
 import { PermissionsService } from '../access-control/permissions.service';
 import { UsersService } from '../identity/users.service';
+import type { ClientIp } from './client-ip.service';
+import { LoginThrottleService } from './login-throttle.service';
 
 interface JwtPayload {
   sub: string;
@@ -24,10 +26,16 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
     private readonly permissionsService: PermissionsService,
+    private readonly loginThrottle: LoginThrottleService,
   ) {}
 
-  async login(credentials: LoginRequest): Promise<LoginResponse> {
+  async login(credentials: LoginRequest, clientIp: ClientIp): Promise<LoginResponse> {
     const username = credentials.username.trim();
+    const reservation = await this.loginThrottle.preflight({
+      username,
+      ipAddress: clientIp.address,
+      ipThrottleValue: clientIp.throttleValue,
+    });
     const databaseUser = await this.usersService.findForAuthentication(username);
     const passwordHash = databaseUser?.passwordCredential?.passwordHash ?? this.dummyPasswordHash;
     const isPasswordValid = await argon2.verify(await passwordHash, credentials.password);
@@ -38,16 +46,21 @@ export class AuthService {
       isPasswordValid;
 
     if (!isValid) {
+      await this.loginThrottle.completeFailure(reservation, databaseUser?.id);
       throw new UnauthorizedException('Invalid username or password.');
     }
 
     const user = await this.permissionsService.getAuthUser(databaseUser.id);
-    if (!user) throw new UnauthorizedException();
+    if (!user) {
+      await this.loginThrottle.completeFailure(reservation, databaseUser.id);
+      throw new UnauthorizedException('Invalid username or password.');
+    }
     const payload: JwtPayload = { sub: user.id, av: user.authVersion };
-    await this.usersService.recordSuccessfulLogin(user.id);
+    const accessToken = await this.jwtService.signAsync(payload);
+    await this.loginThrottle.completeSuccess(reservation, user.id);
 
     return {
-      accessToken: await this.jwtService.signAsync(payload),
+      accessToken,
       user: this.toPublicAuthUser(user),
     };
   }
