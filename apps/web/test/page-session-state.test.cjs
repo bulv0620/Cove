@@ -48,6 +48,45 @@ test('re-activating the current route at the same location is identity preservin
   assert.equal(repeated.sessions[1], result.sessions[1]);
 });
 
+test('sidebar navigation restores the complete location of an existing session', () => {
+  const cached = location('/files', '?path=Image+Hosting');
+  const result = state.initializePageSessions('files', cached, 1);
+  const navigationState = state.createPageSessionNavigationState('files');
+  const routeId = state.pageSessionRouteIdFromNavigationState(navigationState);
+  const resolved = state.resolvePageSessionNavigationLocation(
+    result,
+    'files',
+    location('/files'),
+    routeId === 'files',
+  );
+  assert.equal(resolved, result.sessions[1].location);
+  assert.equal(resolved.search, '?path=Image+Hosting');
+});
+
+test('ordinary navigation keeps its requested location instead of restoring cached search', () => {
+  const result = state.initializePageSessions(
+    'files',
+    location('/files', '?path=Image+Hosting'),
+    1,
+  );
+  const requested = location('/files');
+  assert.equal(
+    state.resolvePageSessionNavigationLocation(result, 'files', requested, false),
+    requested,
+  );
+  assert.equal(state.pageSessionRouteIdFromNavigationState(null), null);
+  assert.equal(state.pageSessionRouteIdFromNavigationState({ pageSessionRouteId: 42 }), null);
+});
+
+test('sidebar navigation uses the requested root for a session that is not open yet', () => {
+  const result = state.initializePageSessions('dashboard', location('/'), 1);
+  const requested = location('/files');
+  assert.equal(
+    state.resolvePageSessionNavigationLocation(result, 'files', requested, true),
+    requested,
+  );
+});
+
 test('closing the active route selects the most recently used remaining session', () => {
   let result = state.initializePageSessions('dashboard', location('/'), 1);
   result = state.openOrActivatePageSession(result, 'users', location('/users'), 2);

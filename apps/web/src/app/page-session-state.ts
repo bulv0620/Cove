@@ -22,6 +22,38 @@ export const DASHBOARD_LOCATION: PageSessionLocation = {
   search: '',
   hash: '',
 };
+const PAGE_SESSION_ROUTE_STATE_KEY = 'pageSessionRouteId';
+
+export function createPageSessionNavigationState(routeId: string): Record<string, string> {
+  return { [PAGE_SESSION_ROUTE_STATE_KEY]: routeId };
+}
+
+export function pageSessionRouteIdFromNavigationState(value: unknown): string | null {
+  if (!value || typeof value !== 'object') return null;
+  const routeId = (value as Record<string, unknown>)[PAGE_SESSION_ROUTE_STATE_KEY];
+  return typeof routeId === 'string' ? routeId : null;
+}
+
+export function pageSessionLocationsEqual(
+  left: PageSessionLocation,
+  right: PageSessionLocation,
+): boolean {
+  return (
+    left.pathname === right.pathname && left.search === right.search && left.hash === right.hash
+  );
+}
+
+export function resolvePageSessionNavigationLocation(
+  state: PageSessionState,
+  routeId: string,
+  requestedLocation: PageSessionLocation,
+  restoreExisting: boolean,
+): PageSessionLocation {
+  if (!restoreExisting) return requestedLocation;
+  return (
+    state.sessions.find((session) => session.routeId === routeId)?.location ?? requestedLocation
+  );
+}
 
 function createSession(
   routeId: string,
@@ -65,10 +97,7 @@ export function openOrActivatePageSession(
     };
   }
 
-  const locationUnchanged =
-    existing.location.pathname === location.pathname &&
-    existing.location.search === location.search &&
-    existing.location.hash === location.hash;
+  const locationUnchanged = pageSessionLocationsEqual(existing.location, location);
   if (state.activeRouteId === routeId && locationUnchanged) return state;
 
   return {

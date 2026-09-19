@@ -1,6 +1,13 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import {
+  Outlet,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+  useNavigationType,
+} from 'react-router-dom';
 import {
   PageSessionTabs,
   pageSessionPanelId,
@@ -16,7 +23,10 @@ import {
   DASHBOARD_ROUTE_ID,
   initializePageSessions,
   openOrActivatePageSession,
+  pageSessionLocationsEqual,
+  pageSessionRouteIdFromNavigationState,
   prunePageSessions,
+  resolvePageSessionNavigationLocation,
   type PageSessionLocation,
   type PageSessionState,
 } from './page-session-state';
@@ -47,6 +57,7 @@ export function PageSessionWorkspace(): JSX.Element {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const navigationType = useNavigationType();
   const queryClient = useQueryClient();
   const sequence = useRef(1);
   const accessibleRoutes = useMemo(
@@ -68,6 +79,8 @@ export function PageSessionWorkspace(): JSX.Element {
   const [state, setState] = useState<PageSessionState>(() =>
     initializePageSessions(initialRoute.id, locationSnapshot(location), sequence.current++),
   );
+  const stateRef = useRef(state);
+  stateRef.current = state;
   const allowedRouteIds = useMemo(
     () => new Set(accessibleRoutes.map(({ id }) => id)),
     [accessibleRoutes],
@@ -76,15 +89,22 @@ export function PageSessionWorkspace(): JSX.Element {
 
   useLayoutEffect(() => {
     if (!currentRoute) return;
-    setState((current) =>
-      openOrActivatePageSession(
-        current,
-        currentRoute.id,
-        locationSnapshot(location),
-        sequence.current++,
-      ),
+    const requestedLocation = locationSnapshot(location);
+    const sidebarRouteId = pageSessionRouteIdFromNavigationState(location.state);
+    const resolvedLocation = resolvePageSessionNavigationLocation(
+      stateRef.current,
+      currentRoute.id,
+      requestedLocation,
+      navigationType === 'PUSH' && sidebarRouteId === currentRoute.id,
     );
-  }, [currentRoute, location]);
+    if (!pageSessionLocationsEqual(resolvedLocation, requestedLocation)) {
+      navigate(resolvedLocation, { replace: true });
+      return;
+    }
+    setState((current) =>
+      openOrActivatePageSession(current, currentRoute.id, requestedLocation, sequence.current++),
+    );
+  }, [currentRoute, location, navigate, navigationType]);
 
   useLayoutEffect(() => {
     const next = prunePageSessions(state, allowedRouteIds, sequence.current++);

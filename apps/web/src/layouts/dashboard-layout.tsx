@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink, useLocation } from 'react-router-dom';
 import { PageSessionWorkspace } from '@/app/page-session-workspace';
+import { createPageSessionNavigationState } from '@/app/page-session-state';
 import { LanguageSwitcher } from '@/components/shared/language-switcher';
 import { Logo } from '@/components/shared/logo';
 import { Button } from '@/components/ui/button';
@@ -42,6 +43,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }): JSX.Elemen
                     <NavLink
                       key={item.translationKey}
                       to={item.to}
+                      state={createPageSessionNavigationState(item.id)}
                       onClick={onNavigate}
                       className={({ isActive }) =>
                         cn(
