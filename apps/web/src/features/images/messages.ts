@@ -1,9 +1,11 @@
 export const imagesEn = {
+  eyebrow: 'Infrastructure',
   title: 'Image Hosting',
   description: 'Images stored in Image Hosting/ on your SMB home.',
   upload: 'Upload images',
   openFiles: 'Open in Files',
   search: 'Search images',
+  showing: 'Showing {{count}} images',
   all: 'All',
   private: 'Private',
   public: 'Public',
@@ -52,11 +54,13 @@ export const imagesEn = {
 };
 
 export const imagesZh = {
+  eyebrow: '基础设施',
   title: '图床',
   description: '图片存储在 SMB 个人目录的 Image Hosting/ 中。',
   upload: '上传图片',
   openFiles: '在 Files 中打开',
   search: '搜索图片',
+  showing: '当前显示 {{count}} 张图片',
   all: '全部',
   private: '私有',
   public: '已公开',

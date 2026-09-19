@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import type { HostedImage } from '@cove/shared';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Modal } from '@/components/ui/modal';
 import {
@@ -235,47 +236,16 @@ export function ImagesPage(): JSX.Element {
     [i18n.language, listing.data?.pages],
   );
 
-  if (status.isPending)
-    return (
-      <div className="flex min-h-64 items-center justify-center">
-        <LoaderCircle className="h-6 w-6 animate-spin" />
-      </div>
-    );
-  if (!available)
-    return (
-      <section className="flex min-h-[calc(100dvh-8rem)] flex-col items-center justify-center gap-4 bg-card p-6 text-center">
-        <HardDrive className="h-10 w-10 text-muted-foreground" />
-        <p className="font-medium">{errorText(statusError)}</p>
-        <p className="max-w-md text-sm text-muted-foreground">
-          {t(status.data?.enabled ? 'files.contact' : 'files.configHint')}
+  const header = (
+    <header className="flex flex-col gap-4 border-b pb-6 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p className="mb-2 font-mono text-xs uppercase tracking-[0.16em] text-primary">
+          {t('images.eyebrow')}
         </p>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => void status.refetch()}>
-            {t('files.refresh')}
-          </Button>
-          {(user?.isSuperAdmin || user?.permissions.includes('identity.user.page')) && (
-            <Button asChild>
-              <Link to="/users">{t('files.manage')}</Link>
-            </Button>
-          )}
-        </div>
-      </section>
-    );
-
-  return (
-    <section>
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{t('images.title')}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{t('images.description')}</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {listing.isFetching
-              ? t('images.syncing')
-              : synced
-                ? t('images.synced', { time: synced })
-                : 'Image Hosting/'}
-          </p>
-        </div>
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{t('images.title')}</h1>
+        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{t('images.description')}</p>
+      </div>
+      {available && (
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline">
             <Link to="/files?path=Image%20Hosting">
@@ -297,146 +267,200 @@ export function ImagesPage(): JSX.Element {
             </Button>
           )}
         </div>
-      </header>
-
-      <div className="mt-6 grid gap-3 lg:grid-cols-[minmax(240px,1fr)_auto_auto_auto]">
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            className="pl-9"
-            value={filter}
-            onChange={(event) => setFilter(event.target.value)}
-            placeholder={t('images.search')}
-            aria-label={t('images.search')}
-          />
-        </div>
-        <Select value={visibility} onValueChange={setVisibility}>
-          <SelectTrigger className="lg:w-40" aria-label={t('common.status')}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('images.all')}</SelectItem>
-            <SelectItem value="private">{t('images.private')}</SelectItem>
-            <SelectItem value="public">{t('images.public')}</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={sort} onValueChange={setSort}>
-          <SelectTrigger className="lg:w-48" aria-label={t('images.modified')}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="modified">{t('images.modified')}</SelectItem>
-            <SelectItem value="name">{t('images.name')}</SelectItem>
-            <SelectItem value="size">{t('images.size')}</SelectItem>
-          </SelectContent>
-        </Select>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => void listing.refetch()}
-          aria-label={t('images.refresh')}
-        >
-          <RefreshCw className={cn('h-4 w-4', listing.isFetching && 'animate-spin')} />
-        </Button>
-      </div>
-
-      {listing.isError ? (
-        <div
-          role="alert"
-          className="mt-6 rounded-xl border border-destructive/40 bg-destructive/5 p-5 text-sm text-destructive"
-        >
-          {errorText(listing.error.message)}
-        </div>
-      ) : listing.isPending ? (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {Array.from({ length: 8 }).map((_, index) => (
-            <div key={index} className="aspect-[4/3] animate-pulse rounded-xl bg-muted" />
-          ))}
-        </div>
-      ) : images.length === 0 ? (
-        <div className="mt-8 rounded-xl border border-dashed p-12 text-center">
-          <FileImage className="mx-auto h-10 w-10 text-muted-foreground" />
-          <h2 className="mt-4 font-semibold">{t('images.empty')}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{t('images.emptyHint')}</p>
-        </div>
-      ) : (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {images.map((image) => (
-            <article
-              key={image.id}
-              className="overflow-hidden rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md"
-            >
-              <button
-                className="block aspect-[4/3] w-full overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
-                onClick={() => setSelected(image)}
-                aria-label={`${t('images.details')}: ${image.name}`}
-              >
-                <ProtectedImage image={image} />
-              </button>
-              <div className="p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h2 className="truncate text-sm font-medium" title={image.name}>
-                      {image.name}
-                    </h2>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {fileSize(image.sizeBytes)}
-                    </p>
-                  </div>
-                  <span
-                    className={cn(
-                      'inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-xs font-medium',
-                      image.isPublic
-                        ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-                        : 'bg-muted text-muted-foreground',
-                    )}
-                  >
-                    {image.isPublic ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-                    {image.isPublic ? t('images.public') : t('images.private')}
-                  </span>
-                </div>
-                {image.publicUrl ? (
-                  <div className="mt-3 flex items-center gap-2">
-                    <code className="min-w-0 flex-1 truncate rounded bg-muted px-2 py-2 text-xs">
-                      {image.publicUrl}
-                    </code>
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      aria-label={t('images.copy')}
-                      onClick={() => void copy(fullUrl(image.publicUrl!))}
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  status.data?.capabilities.publish && (
-                    <Button
-                      className="mt-3 w-full"
-                      variant="outline"
-                      onClick={() => visibilityMutation.mutate({ image, value: true })}
-                    >
-                      {t('images.enableLink')}
-                    </Button>
-                  )
-                )}
-              </div>
-            </article>
-          ))}
-        </div>
       )}
-      {listing.hasNextPage && (
-        <div className="mt-6 flex justify-center">
+    </header>
+  );
+
+  if (status.isPending)
+    return (
+      <div className="space-y-6">
+        {header}
+        <Card className="flex min-h-48 items-center justify-center">
+          <LoaderCircle className="h-5 w-5 animate-spin text-muted-foreground" />
+        </Card>
+      </div>
+    );
+  if (!available)
+    return (
+      <div className="space-y-6">
+        {header}
+        <Card className="flex min-h-72 flex-col items-center justify-center gap-4 p-8 text-center">
+          <HardDrive className="h-10 w-10 text-muted-foreground" />
+          <p className="font-medium">{errorText(statusError)}</p>
+          <p className="max-w-md text-sm text-muted-foreground">
+            {t(status.data?.enabled ? 'files.contact' : 'files.configHint')}
+          </p>
+          <div className="flex flex-wrap justify-center gap-2">
+            <Button variant="outline" onClick={() => void status.refetch()}>
+              {t('files.refresh')}
+            </Button>
+            {(user?.isSuperAdmin || user?.permissions.includes('identity.user.page')) && (
+              <Button asChild>
+                <Link to="/users">{t('files.manage')}</Link>
+              </Button>
+            )}
+          </div>
+        </Card>
+      </div>
+    );
+
+  return (
+    <div className="space-y-6">
+      {header}
+
+      <Card className="overflow-hidden">
+        <div className="grid gap-3 border-b p-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:grid-cols-[minmax(240px,1fr)_auto_auto_auto]">
+          <div className="relative sm:col-span-3 lg:col-span-1">
+            <Search className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              className="pl-9"
+              value={filter}
+              onChange={(event) => setFilter(event.target.value)}
+              placeholder={t('images.search')}
+              aria-label={t('images.search')}
+            />
+          </div>
+          <Select value={visibility} onValueChange={setVisibility}>
+            <SelectTrigger className="lg:w-40" aria-label={t('common.status')}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('images.all')}</SelectItem>
+              <SelectItem value="private">{t('images.private')}</SelectItem>
+              <SelectItem value="public">{t('images.public')}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={sort} onValueChange={setSort}>
+            <SelectTrigger className="lg:w-48" aria-label={t('images.modified')}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="modified">{t('images.modified')}</SelectItem>
+              <SelectItem value="name">{t('images.name')}</SelectItem>
+              <SelectItem value="size">{t('images.size')}</SelectItem>
+            </SelectContent>
+          </Select>
           <Button
             variant="outline"
-            disabled={listing.isFetchingNextPage}
-            onClick={() => void listing.fetchNextPage()}
+            size="icon"
+            onClick={() => void listing.refetch()}
+            aria-label={t('images.refresh')}
           >
-            {listing.isFetchingNextPage && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
-            {t('images.loadMore')}
+            <RefreshCw className={cn('h-4 w-4', listing.isFetching && 'animate-spin')} />
           </Button>
+          <p className="text-xs text-muted-foreground sm:col-span-3 lg:col-span-4">
+            {t('images.showing', { count: images.length })}
+            {' · '}
+            {listing.isFetching
+              ? t('images.syncing')
+              : synced
+                ? t('images.synced', { time: synced })
+                : 'Image Hosting/'}
+          </p>
         </div>
-      )}
+
+        {listing.isError ? (
+          <div className="p-6 text-center">
+            <p role="alert" className="text-sm text-destructive">
+              {errorText(listing.error.message)}
+            </p>
+            <Button variant="outline" className="mt-4" onClick={() => void listing.refetch()}>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              {t('common.retry')}
+            </Button>
+          </div>
+        ) : listing.isPending ? (
+          <div className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <div key={index} className="aspect-[4/3] animate-pulse rounded-lg bg-muted" />
+            ))}
+          </div>
+        ) : images.length === 0 ? (
+          <div className="flex min-h-72 flex-col items-center justify-center p-8 text-center">
+            <FileImage className="h-10 w-10 text-muted-foreground" />
+            <h2 className="mt-4 font-semibold">{t('images.empty')}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{t('images.emptyHint')}</p>
+          </div>
+        ) : (
+          <div className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {images.map((image) => (
+              <article key={image.id} className="overflow-hidden rounded-lg border bg-card">
+                <button
+                  className="block aspect-[4/3] w-full overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                  onClick={() => setSelected(image)}
+                  aria-label={`${t('images.details')}: ${image.name}`}
+                >
+                  <ProtectedImage image={image} />
+                </button>
+                <div className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h2 className="truncate text-sm font-medium" title={image.name}>
+                        {image.name}
+                      </h2>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {fileSize(image.sizeBytes)}
+                      </p>
+                    </div>
+                    <span
+                      className={cn(
+                        'inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-xs font-medium',
+                        image.isPublic
+                          ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                          : 'bg-muted text-muted-foreground',
+                      )}
+                    >
+                      {image.isPublic ? (
+                        <Eye className="h-3 w-3" />
+                      ) : (
+                        <EyeOff className="h-3 w-3" />
+                      )}
+                      {image.isPublic ? t('images.public') : t('images.private')}
+                    </span>
+                  </div>
+                  {image.publicUrl ? (
+                    <div className="mt-3 flex items-center gap-2">
+                      <code className="min-w-0 flex-1 truncate rounded bg-muted px-2 py-2 text-xs">
+                        {image.publicUrl}
+                      </code>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        aria-label={t('images.copy')}
+                        onClick={() => void copy(fullUrl(image.publicUrl!))}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    status.data?.capabilities.publish && (
+                      <Button
+                        className="mt-3 w-full"
+                        variant="outline"
+                        onClick={() => visibilityMutation.mutate({ image, value: true })}
+                      >
+                        {t('images.enableLink')}
+                      </Button>
+                    )
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+        {listing.hasNextPage && (
+          <div className="flex justify-center border-t p-4">
+            <Button
+              variant="outline"
+              disabled={listing.isFetchingNextPage}
+              onClick={() => void listing.fetchNextPage()}
+            >
+              {listing.isFetchingNextPage && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
+              {t('images.loadMore')}
+            </Button>
+          </div>
+        )}
+      </Card>
 
       <Modal
         open={uploadOpen}
@@ -644,6 +668,6 @@ export function ImagesPage(): JSX.Element {
           </div>
         )}
       </Modal>
-    </section>
+    </div>
   );
 }
