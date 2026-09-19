@@ -1,4 +1,4 @@
-import { ChevronRight, Menu, Moon, Sun, X } from 'lucide-react';
+import { ChevronRight, Menu, Moon, PanelLeftClose, PanelLeftOpen, Sun, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink, useLocation } from 'react-router-dom';
@@ -11,18 +11,54 @@ import { UserMenu } from '@/features/auth/components/user-menu';
 import { navigationGroups, routedNavigationItems } from '@/app/navigation';
 import { useTheme } from '@/app/theme-provider';
 import { useAuth } from '@/features/auth/hooks';
+import { readSidebarCollapsed, writeSidebarCollapsed } from '@/lib/sidebar-preference';
 import { cn } from '@/lib/utils';
 
-function SidebarContent({ onNavigate }: { onNavigate?: () => void }): JSX.Element {
+interface SidebarContentProps {
+  collapsed?: boolean;
+  onCollapsedChange?: (collapsed: boolean) => void;
+  onNavigate?: () => void;
+}
+
+function SidebarContent({
+  collapsed = false,
+  onCollapsedChange,
+  onNavigate,
+}: SidebarContentProps): JSX.Element {
   const { t } = useTranslation();
   const { user } = useAuth();
 
   return (
     <>
-      <div className="flex h-16 items-center border-b px-5">
-        <Logo />
+      <div
+        className={cn(
+          'flex h-16 items-center overflow-hidden border-b',
+          collapsed ? 'justify-center' : 'px-5',
+        )}
+      >
+        {!collapsed && <Logo className="min-w-0 overflow-hidden" />}
+        {onCollapsedChange && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn('shrink-0', collapsed ? 'h-9 min-h-9 w-9' : 'ml-auto')}
+            onClick={() => onCollapsedChange(!collapsed)}
+            aria-label={collapsed ? t('navigation.expandSidebar') : t('navigation.collapseSidebar')}
+            aria-expanded={!collapsed}
+            title={collapsed ? t('navigation.expandSidebar') : t('navigation.collapseSidebar')}
+          >
+            {collapsed ? (
+              <PanelLeftOpen className="h-4 w-4" />
+            ) : (
+              <PanelLeftClose className="h-4 w-4" />
+            )}
+          </Button>
+        )}
       </div>
-      <nav className="flex-1 overflow-y-auto px-3 py-5" aria-label={t('navigation.primary')}>
+      <nav
+        className={cn('flex-1 overflow-y-auto py-5', collapsed ? 'px-2' : 'px-3')}
+        aria-label={t('navigation.primary')}
+      >
         {navigationGroups.map((group) => {
           const visibleItems = group.items.filter(
             (item) =>
@@ -32,8 +68,14 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }): JSX.Elemen
           );
           if (visibleItems.length === 0) return null;
           return (
-            <div key={group.translationKey} className="mb-6">
-              <p className="mb-2 px-3 font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+            <div key={group.translationKey} className="mb-6" aria-label={t(group.translationKey)}>
+              <p
+                className={cn(
+                  'mb-2 px-3 font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground',
+                  'whitespace-nowrap',
+                  collapsed && 'sr-only',
+                )}
+              >
                 {t(group.translationKey)}
               </p>
               <div className="space-y-1">
@@ -45,9 +87,12 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }): JSX.Elemen
                       to={item.to}
                       state={createPageSessionNavigationState(item.id)}
                       onClick={onNavigate}
+                      title={collapsed ? t(item.translationKey) : undefined}
+                      aria-label={collapsed ? t(item.translationKey) : undefined}
                       className={({ isActive }) =>
                         cn(
-                          'flex h-10 items-center gap-3 rounded-md px-3 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring',
+                          'flex h-10 items-center gap-3 overflow-hidden rounded-md px-3 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring',
+                          collapsed && 'justify-center gap-0 px-0',
                           isActive
                             ? 'bg-accent text-accent-foreground'
                             : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground',
@@ -55,8 +100,20 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }): JSX.Elemen
                       }
                     >
                       <Icon className="h-4 w-4" aria-hidden="true" />
-                      <span>{t(item.translationKey)}</span>
-                      <ChevronRight className="ml-auto h-3.5 w-3.5 opacity-50" aria-hidden="true" />
+                      <span
+                        className={cn(
+                          'min-w-0 overflow-hidden whitespace-nowrap',
+                          collapsed && 'sr-only',
+                        )}
+                      >
+                        {t(item.translationKey)}
+                      </span>
+                      {!collapsed && (
+                        <ChevronRight
+                          className="ml-auto h-3.5 w-3.5 opacity-50"
+                          aria-hidden="true"
+                        />
+                      )}
                     </NavLink>
                   );
                 })}
@@ -65,12 +122,14 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }): JSX.Elemen
           );
         })}
       </nav>
-      <div className="border-t px-5 py-4 text-xs text-muted-foreground">
-        <div className="flex items-center gap-2">
+      <div
+        className={cn('border-t py-4 text-xs text-muted-foreground', collapsed ? 'px-2' : 'px-5')}
+      >
+        <div className={cn('flex items-center gap-2', collapsed && 'justify-center')}>
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          <span>{t('navigation.consoleAvailable')}</span>
+          <span className={cn(collapsed && 'sr-only')}>{t('navigation.consoleAvailable')}</span>
         </div>
-        <p className="mt-1 font-mono text-[10px]">skeleton · v0.1.0</p>
+        {!collapsed && <p className="mt-1 font-mono text-[10px]">skeleton · v0.1.0</p>}
       </div>
     </>
   );
@@ -81,10 +140,16 @@ export function DashboardLayout(): JSX.Element {
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(readSidebarCollapsed);
   const currentPageKey =
     routedNavigationItems.find(({ to }) => to === location.pathname)?.translationKey ??
     'navigation.dashboard';
   const { user } = useAuth();
+
+  const setDesktopSidebarCollapsed = (collapsed: boolean): void => {
+    setSidebarCollapsed(collapsed);
+    writeSidebarCollapsed(collapsed);
+  };
 
   return (
     <div className="min-h-dvh bg-background">
@@ -95,8 +160,16 @@ export function DashboardLayout(): JSX.Element {
         {t('navigation.skipToContent')}
       </a>
 
-      <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 flex-col border-r bg-card lg:flex">
-        <SidebarContent />
+      <aside
+        className={cn(
+          'fixed inset-y-0 left-0 z-20 hidden flex-col overflow-x-hidden border-r bg-card transition-[width] duration-200 lg:flex',
+          sidebarCollapsed ? 'w-20' : 'w-64',
+        )}
+      >
+        <SidebarContent
+          collapsed={sidebarCollapsed}
+          onCollapsedChange={setDesktopSidebarCollapsed}
+        />
       </aside>
 
       {mobileMenuOpen && (
@@ -121,7 +194,12 @@ export function DashboardLayout(): JSX.Element {
         </div>
       )}
 
-      <div className="lg:pl-64">
+      <div
+        className={cn(
+          'transition-[padding] duration-200',
+          sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64',
+        )}
+      >
         <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/85 sm:px-6 lg:px-8">
           <Button
             variant="ghost"

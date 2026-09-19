@@ -18,7 +18,7 @@ export function Logo({ compact = false, className }: LogoProps): JSX.Element {
         className="h-9 w-9 shrink-0 rounded-lg"
       />
       {!compact && (
-        <span>
+        <span className="shrink-0 whitespace-nowrap">
           <span className="block text-sm font-semibold tracking-tight">Cove</span>
           <span className="block text-xs text-muted-foreground">{t('common.productSubtitle')}</span>
         </span>
