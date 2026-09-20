@@ -7,7 +7,7 @@ import {
   LockKeyhole,
   ShieldCheck,
 } from 'lucide-react';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { LanguageSwitcher } from '@/components/shared/language-switcher';
@@ -79,6 +79,21 @@ export function LoginPage(): JSX.Element {
     }
   };
 
+  const handlePasswordKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
+    if (
+      event.key !== 'Enter' ||
+      event.nativeEvent.isComposing ||
+      isSubmitting ||
+      retryAfterSeconds !== null ||
+      !username ||
+      !password
+    )
+      return;
+
+    event.preventDefault();
+    event.currentTarget.form?.requestSubmit();
+  };
+
   return (
     <main className="relative isolate flex min-h-dvh flex-col bg-background">
       <div
@@ -147,6 +162,7 @@ export function LoginPage(): JSX.Element {
                     required
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
+                    onKeyDown={handlePasswordKeyDown}
                     placeholder={t('auth.passwordPlaceholder')}
                     className="h-12 rounded-lg bg-background/60 pl-3.5 pr-12"
                     aria-invalid={Boolean(displayedError)}
