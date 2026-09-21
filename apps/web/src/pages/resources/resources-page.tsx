@@ -53,6 +53,12 @@ const resourceModules = [
     descriptionKey: 'resources.moduleDescriptions.system',
     icon: 'Settings',
   },
+  {
+    code: 'workspace',
+    labelKey: 'resources.modules.workspace',
+    descriptionKey: 'resources.moduleDescriptions.workspace',
+    icon: 'NotebookPen',
+  },
 ] as const satisfies ReadonlyArray<{
   code: ResourceModuleCode;
   labelKey: string;
@@ -71,6 +77,7 @@ const resourceIconOptions = [
   { value: 'Network', labelKey: 'resources.iconNetwork' },
   { value: 'Boxes', labelKey: 'resources.iconApps' },
   { value: 'FileStack', labelKey: 'resources.iconFiles' },
+  { value: 'NotebookPen', labelKey: 'resources.iconNotes' },
   { value: 'KeyRound', labelKey: 'resources.iconAccess' },
   { value: 'Activity', labelKey: 'resources.iconStatus' },
 ] as const;

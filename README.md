@@ -4,7 +4,7 @@ Your self-hosted personal workspace — 运行在 NAS 上的自托管个人工�
 
 ## 当前状态
 
-**Self-hosted personal workspace foundation**。当前包含身份与访问管理、审计、SMB 个人文件访问，以及基于 SMB 的私有优先图床。Markdown + Canvas 笔记、应用工具及定时 JS 脚本属于[功能规划](docs/product/roadmap.md)，尚未实现。
+**Self-hosted personal workspace foundation**。当前包含身份与访问管理、审计、SMB 个人文件访问、基于 SMB 的私有优先图床，以及基于 SMB Markdown 文件的所见即所得在线笔记。应用工具及定时 JS 脚本属于[功能规划](docs/product/roadmap.md)，尚未实现。
 
 ## 技术栈
 

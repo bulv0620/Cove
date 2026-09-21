@@ -6,6 +6,7 @@ import { AuditModule } from './modules/audit/audit.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { SystemModule } from './modules/system/system.module';
 import { ImagesModule } from './modules/images/images.module';
+import { NotesModule } from './modules/notes/notes.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { ImagesModule } from './modules/images/images.module';
     SystemModule,
     FilesModule,
     ImagesModule,
+    NotesModule,
   ],
 })
 export class AppModule {}

@@ -32,7 +32,7 @@ export type RoleStatus = 'ACTIVE' | 'DISABLED';
 export type ResourceStatus = 'ACTIVE' | 'DISABLED';
 export type PermissionType = 'PAGE' | 'ACTION';
 
-export type ResourceModuleCode = 'identity' | 'infrastructure' | 'system';
+export type ResourceModuleCode = 'identity' | 'infrastructure' | 'workspace' | 'system';
 
 export interface RoleReference {
   id: string;
@@ -279,4 +279,65 @@ export interface ImageUploadSummary {
   state: string;
   errorCode: string | null;
   createdAt: string;
+}
+
+export interface NotesStatus extends SmbBindingSummary {
+  rootPath: string;
+  maxNoteBytes: string;
+  capabilities: { create: boolean; update: boolean; rename: boolean; delete: boolean };
+}
+
+export interface NotesEntriesResponse {
+  path: string;
+  entries: FileEntry[];
+  nextCursor: string | null;
+  total: number;
+}
+
+export interface NoteContent {
+  path: string;
+  markdown: string;
+  revision: string;
+  sizeBytes: string;
+  modifiedAt: string;
+}
+
+export interface NoteSaveRequest {
+  path: string;
+  markdown: string;
+  expectedRevision: string;
+  requestId: string;
+}
+
+export interface NoteSaveResult {
+  path: string;
+  revision: string;
+  saved: boolean;
+  operationId: string | null;
+  sizeBytes: string;
+  modifiedAt: string;
+  /**
+   * SMB identity of the object that now holds this note. Saving replaces the
+   * file, so a listing read before the save no longer describes it; rename and
+   * delete must carry this identity instead.
+   */
+  objectId: string;
+}
+
+export interface NoteOperationSummary {
+  id: string;
+  relativePath: string;
+  state: string;
+  errorCode: string | null;
+  cleanupPending: boolean;
+  createdAt: string;
+}
+
+export interface NoteCreateRequest {
+  path: string;
+}
+
+export interface NoteRenameRequest {
+  path: string;
+  newName: string;
 }

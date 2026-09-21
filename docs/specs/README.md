@@ -49,6 +49,7 @@ specs/
 
 ## 归档 Specs
 
+- [`2026-09-21-smb-markdown-notes`](archive/2026-09-21-smb-markdown-notes/spec.md)：Completed，维护者于 2026-09-21 完成 NAS 与浏览器真实环境验收并要求归档；交付基于 SMB 普通文件的所见即所得 Markdown 编辑、安全保存、恢复草稿与图床粘贴集成。
 - [`2026-09-19-page-session-sidebar-location-restore`](archive/2026-09-19-page-session-sidebar-location-restore/spec.md)：Completed，维护者于 2026-09-19 验收通过；修复侧栏重新激活页面会话时丢失 Files `?path=...` 等完整地址的问题。
 - [`2026-09-18-page-session-tabs`](archive/2026-09-18-page-session-tabs/spec.md)：Completed，维护者于 2026-09-18 验收通过并要求归档；交付顶部页面会话标签、页面状态保活、关闭释放、认证隔离和响应式/可访问性支持。
 - [`2026-09-18-smb-image-hosting`](archive/2026-09-18-smb-image-hosting/spec.md)：Completed，维护者于 2026-09-18 验收当前实现并要求归档；交付 SMB 图床、手动公开链接、绑定失效、内容校验与恢复机制，环境特定 NAS/浏览器验证按记录延期。

@@ -75,7 +75,7 @@ export function PermissionPicker({
     }));
   }, [permissions, selected]);
   const moduleGroups = useMemo(() => {
-    const moduleOrder = ['identity', 'infrastructure', 'system'];
+    const moduleOrder = ['identity', 'infrastructure', 'workspace', 'system'];
     return Object.entries(
       permissionTree.reduce<Record<string, typeof permissionTree>>((groups, item) => {
         (groups[item.resource.module] ??= []).push(item);
@@ -109,6 +109,7 @@ export function PermissionPicker({
   const moduleLabels: Record<string, string> = {
     identity: t('resources.modules.identity'),
     infrastructure: t('resources.modules.infrastructure'),
+    workspace: t('resources.modules.workspace'),
     system: t('resources.modules.system'),
   };
 

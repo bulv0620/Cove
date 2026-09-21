@@ -66,6 +66,7 @@ model User {
   fileOperations     FileOperation[]
   downloadTickets    DownloadTicket[]
   imageAssets        ImageAsset[]
+  noteWriteOperations NoteWriteOperation[]
   passwordCredential PasswordCredential?
   roleAssignments    RoleAssignment[]
 
@@ -329,4 +330,37 @@ model ImagePublicRateBucket {
   @@id([bucketKey, minuteStart])
   @@index([minuteStart])
   @@map("image_public_rate_buckets")
+}
+
+model NoteWriteOperation {
+  id                String   @id @db.Char(36)
+  userId            String   @map("user_id") @db.Char(36)
+  bindingVersion    String   @map("binding_version") @db.Char(36)
+  configFingerprint String   @map("config_fingerprint") @db.Char(64)
+  authVersion       Int      @map("auth_version")
+  requestId         String   @map("request_id") @db.Char(36)
+  relativePath      String   @map("relative_path") @db.Text
+  tempPath          String   @map("temp_path") @db.Text
+  /// Reserved sibling that holds the replaced version during a swap; cleaned by identity.
+  backupPath        String?  @map("backup_path") @db.Text
+  sourceObjectId    String?  @map("source_object_id") @db.VarChar(64)
+  sourceModifiedAt  DateTime? @map("source_modified_at") @db.DateTime(3)
+  sourceSizeBytes   BigInt   @default(0) @map("source_size_bytes")
+  sourceSha256      String?  @map("source_sha256") @db.Char(64)
+  targetObjectId    String?  @map("target_object_id") @db.VarChar(64)
+  targetSha256      String?  @map("target_sha256") @db.Char(64)
+  targetSizeBytes   BigInt   @default(0) @map("target_size_bytes")
+  targetModifiedAt  DateTime? @map("target_modified_at") @db.DateTime(3)
+  targetModifiedRaw String?  @map("target_modified_raw") @db.VarChar(64)
+  state             String   @db.VarChar(32)
+  errorCode         String?  @map("error_code") @db.VarChar(64)
+  cleanupPending    Boolean  @default(false) @map("cleanup_pending")
+  leaseExpiresAt    DateTime @map("lease_expires_at") @db.DateTime(3)
+  createdAt         DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bindingVersion, requestId])
+  @@index([state, leaseExpiresAt])
+  @@map("note_write_operations")
 }

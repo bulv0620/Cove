@@ -19,12 +19,15 @@ from smbprotocol.open import (
 )
 from smbprotocol.file_info import (
     FileInformationClass, FileInternalInformation, FileRenameInformation, FileDispositionInformation,
+    FileAllInformation,
 )
+from smbprotocol.structure import DateTimeField
 
 logging.disable(logging.CRITICAL)
 
 
 TEMP_PREFIX = '.cove-upload-'
+NOTE_TEMP_PREFIX = '.cove-note-'
 IMAGE_FORMATS = {
     'JPEG': ('image/jpeg', 'jpg'), 'PNG': ('image/png', 'png'),
     'WEBP': ('image/webp', 'webp'), 'GIF': ('image/gif', 'gif'),
@@ -134,9 +137,22 @@ def is_temporary_name(name):
     return name.lower().startswith(TEMP_PREFIX)
 
 
+def is_note_temporary_name(name):
+    return name.lower().startswith(NOTE_TEMP_PREFIX)
+
+
+def is_reserved_name(name):
+    return is_temporary_name(name) or is_note_temporary_name(name)
+
+
 def emit(**event):
     sys.stderr.write(json.dumps(event, ensure_ascii=True) + '\n')
     sys.stderr.flush()
+
+
+def iso_ms(value):
+    """Millisecond-precision ISO timestamps keep revision round-trips byte-stable."""
+    return value.replace(microsecond=value.microsecond // 1000 * 1000).isoformat()
 
 
 def path_parts(path):
@@ -171,7 +187,7 @@ class Client:
         if self.tree.is_dfs_share:
             raise ValueError('UNSUPPORTED_LINK')
 
-    def open(self, path, directory=None, create=False, write=False, delete=False):
+    def open(self, path, directory=None, create=False, write=False, delete=False, share=0x3):
         handle = Open(self.tree, '\\'.join(path_parts(path)))
         options = CreateOptions.FILE_OPEN_REPARSE_POINT
         if directory is not None:
@@ -179,7 +195,7 @@ class Client:
         # READ_ATTRIBUTES | SYNCHRONIZE | READ_DATA; writers add WRITE_DATA and DELETE.
         access = 0x100081 | (0x2 if write else 0) | (0x10000 if delete else 0)
         handle.create(ImpersonationLevel.Impersonation, access, FileAttributes.FILE_ATTRIBUTE_NORMAL,
-                      0x3, CreateDisposition.FILE_CREATE if create else CreateDisposition.FILE_OPEN, options)
+                      share, CreateDisposition.FILE_CREATE if create else CreateDisposition.FILE_OPEN, options)
         self.handles.append(handle)
         if handle.file_attributes & FileAttributes.FILE_ATTRIBUTE_REPARSE_POINT:
             raise ValueError('UNSUPPORTED_LINK')
@@ -202,6 +218,23 @@ class Client:
         response.unpack(self.connection.receive(pending)['data'].get_value())
         return str(response.parse_buffer(FileInternalInformation)['index_number'].get_value())
 
+    def stat_info(self, handle):
+        """Fresh identity, size, and mtime beyond the values cached at open."""
+        req = SMB2QueryInfoRequest()
+        req['info_type'] = FileAllInformation.INFO_TYPE
+        req['file_info_class'] = FileAllInformation.INFO_CLASS
+        req['output_buffer_length'] = 1024
+        req['file_id'] = handle.file_id
+        pending = self.connection.send(req, self.session.session_id, self.tree.tree_connect_id)
+        response = SMB2QueryInfoResponse()
+        response.unpack(self.connection.receive(pending)['data'].get_value())
+        info = response.parse_buffer(FileAllInformation)
+        stamp = DateTimeField()
+        stamp.set_value(int(info['basic_information']['last_write_time'].get_value()).to_bytes(8, 'little'))
+        return (str(info['internal_information']['index_number'].get_value()),
+                str(info['standard_information']['end_of_file'].get_value()),
+                iso_ms(stamp.get_value()))
+
     def set_info(self, handle, info):
         req = SMB2SetInfoRequest()
         req['info_type'] = info.INFO_TYPE
@@ -218,7 +251,7 @@ class Client:
 def metadata(handle, path, identity=None):
     return dict(name=path.split('/')[-1], relativePath=path,
                 type='directory' if handle.file_attributes & 0x10 else 'file',
-                sizeBytes=str(handle.end_of_file), modifiedAt=handle.last_write_time.isoformat(),
+                sizeBytes=str(handle.end_of_file), modifiedAt=iso_ms(handle.last_write_time),
                 hidden=bool(handle.file_attributes & 2) or path.split('/')[-1].startswith('.'),
                 supported=True, objectId=identity)
 
@@ -258,10 +291,11 @@ def run(config):
                         object_id = str(entry['file_id'].get_value())
                     except Exception:
                         object_id = None
+                        supported = False
                     entries.append(dict(name=name, relativePath='/'.join(filter(None, [path, name])),
                                         type='directory' if attrs & 0x10 else 'file',
                                         sizeBytes=str(entry['end_of_file'].get_value()),
-                                        modifiedAt=entry['last_write_time'].get_value().isoformat(),
+                                        modifiedAt=iso_ms(entry['last_write_time'].get_value()),
                                         hidden=bool(attrs & 2) or name.startswith('.'), supported=supported,
                                         objectId=object_id))
             if action == 'test':
@@ -277,11 +311,35 @@ def run(config):
             source_parts, target_parts = path_parts(path), path_parts(target)
             if (not source_parts or not target_parts or source_parts[:-1] != target_parts[:-1]
                     or source_parts == target_parts
-                    or is_temporary_name(source_parts[-1])
-                    or is_temporary_name(target_parts[-1])):
+                    or is_reserved_name(source_parts[-1])
+                    or is_reserved_name(target_parts[-1])):
                 raise ValueError('INVALID_PATH')
             handle = client.open(path, delete=True)
             identity = client.identity(handle)
+            if config.get('objectId') is not None and identity != config['objectId']:
+                # The listed object was replaced underneath us; never rename the impostor.
+                raise ValueError('OBJECT_CHANGED')
+            info = FileRenameInformation()
+            info['replace_if_exists'] = False
+            info['file_name'] = '\\'.join(target_parts)
+            client.set_info(handle, info)
+            result = metadata(handle, target, identity)
+            handle.close()
+            emit(result=result)
+        elif action == 'restore':
+            # Recovery-only: move a registered reserved-name backup back to its
+            # vacant note path after an interrupted replace swap.
+            target = config.get('targetPath', '')
+            source_parts, target_parts = path_parts(path), path_parts(target)
+            if (not source_parts or not target_parts or source_parts[:-1] != target_parts[:-1]
+                    or source_parts == target_parts
+                    or not is_reserved_name(source_parts[-1])
+                    or is_reserved_name(target_parts[-1])):
+                raise ValueError('INVALID_PATH')
+            handle = client.open(path, delete=True)
+            identity = client.identity(handle)
+            if identity != config['objectId']:
+                raise ValueError('OBJECT_CHANGED')
             info = FileRenameInformation()
             info['replace_if_exists'] = False
             info['file_name'] = '\\'.join(target_parts)
@@ -291,7 +349,7 @@ def run(config):
             emit(result=result)
         elif action in ('delete', 'delete_object'):
             parts = path_parts(path)
-            if not parts or is_temporary_name(parts[-1]):
+            if not parts or is_reserved_name(parts[-1]):
                 raise ValueError('INVALID_PATH')
             handle = client.open(path, delete=True)
             if action == 'delete_object' and client.identity(handle) != config['objectId']:
@@ -378,7 +436,7 @@ def run(config):
             handle = client.open(path, directory=False if action == 'read' else None, delete=action == 'cleanup')
             identity = client.identity(handle)
             if action == 'cleanup':
-                if identity != config['objectId'] or not is_temporary_name(path.split('/')[-1]):
+                if identity != config['objectId'] or not is_reserved_name(path.split('/')[-1]):
                     raise ValueError('OBJECT_CHANGED')
                 info = FileDispositionInformation()
                 info['delete_pending'] = True
@@ -400,7 +458,10 @@ def run(config):
                 emit(result=dict(bytes=str(offset)))
         elif action == 'write':
             temp = config['tempPath']
-            if path_parts(temp)[:-1] != path_parts(path)[:-1] or not is_temporary_name(temp.split('/')[-1]):
+            temp_name = temp.split('/')[-1]
+            # noteTemp lets note creation reuse this no-overwrite commit with the reserved note prefix.
+            allowed = is_temporary_name(temp_name) or (config.get('noteTemp') and is_note_temporary_name(temp_name))
+            if path_parts(temp)[:-1] != path_parts(path)[:-1] or not allowed:
                 raise ValueError('INVALID_PATH')
             handle = client.open(temp, directory=False, create=True, write=True, delete=True)
             identity = client.identity(handle)
@@ -455,6 +516,108 @@ def run(config):
             client.set_info(handle, info)
             handle.close()
             emit(result=dict(bytes=str(offset), objectId=identity))
+        elif action == 'write_note':
+            temp, backup = config['tempPath'], config.get('backupPath')
+            expected = config.get('expected')
+            if (backup is None
+                    or path_parts(temp)[:-1] != path_parts(path)[:-1]
+                    or path_parts(backup)[:-1] != path_parts(path)[:-1]
+                    or temp == backup
+                    or not is_note_temporary_name(temp.split('/')[-1])
+                    or not is_note_temporary_name(backup.split('/')[-1])
+                    or not isinstance(expected, dict)):
+                raise ValueError('INVALID_PATH')
+            # Pin the target with read-only sharing so external writers, deleters,
+            # and replace-renames fail for the whole operation. DELETE access lets
+            # this same pinned handle move the object during the swap below.
+            try:
+                target = client.open(path, directory=False, share=0x1, delete=True)
+            except Exception as exc:
+                status = getattr(exc, 'status', None)
+                if status in (0xC0000034, 0xC000003A, 0xC00000BA):
+                    raise ValueError('OBJECT_CHANGED') from exc
+                raise
+            unchanged = lambda: (
+                client.stat_info(target) == (expected.get('objectId'),
+                                             str(expected.get('sizeBytes')),
+                                             expected.get('modifiedAt')))
+            if not unchanged():
+                raise ValueError('OBJECT_CHANGED')
+            handle = client.open(temp, directory=False, create=True, write=True, delete=True)
+            identity = client.identity(handle)
+            emit(created=dict(objectId=identity))
+            expected_size, offset = int(config['size']), 0
+            digest = hashlib.sha256()
+            while offset < expected_size:
+                data = sys.stdin.buffer.read(min(1024 * 1024, client.connection.max_write_size,
+                                                 expected_size - offset))
+                if not data:
+                    raise ValueError('TRANSFER_INTERRUPTED')
+                written = handle.write(data, offset)
+                if written != len(data):
+                    raise ValueError('TRANSFER_INTERRUPTED')
+                digest.update(data)
+                offset += written
+                emit(progress=str(offset))
+            if sys.stdin.buffer.read(1):
+                raise ValueError('SIZE_MISMATCH')
+            handle.flush()
+            emit(prepared=dict(bytes=str(offset), objectId=identity, sha256=digest.hexdigest()))
+            with os.fdopen(3, 'r') as control:
+                if control.readline().strip() != 'commit':
+                    raise ValueError('TRANSFER_INTERRUPTED')
+            # Nothing could have modified the pinned target since the first check,
+            # so this re-check only closes the remaining in-place write window.
+            if not unchanged():
+                raise ValueError('OBJECT_CHANGED')
+            # Conditional replace as an identity-checked swap: the pinned target is
+            # renamed to its registered backup, the staged file claims the note name
+            # with a no-overwrite rename, and only after the final identity match is
+            # the backup released. A concurrent external change can never be silently
+            # overwritten: while the pin holds, every competing writer fails, and the
+            # no-overwrite rename turns a post-pin race into a loud OBJECT_CHANGED
+            # that rolls the original back into place.
+            away = FileRenameInformation()
+            away['replace_if_exists'] = False
+            away['file_name'] = '\\'.join(path_parts(backup))
+            client.set_info(target, away)
+            try:
+                into = FileRenameInformation()
+                into['replace_if_exists'] = False
+                into['file_name'] = '\\'.join(path_parts(path))
+                client.set_info(handle, into)
+            except Exception as exc:
+                try:
+                    back = FileRenameInformation()
+                    back['replace_if_exists'] = False
+                    back['file_name'] = '\\'.join(path_parts(path))
+                    client.set_info(target, back)
+                except Exception:
+                    pass  # Recovery restores the registered backup by identity.
+                if getattr(exc, 'status', None) == 0xC0000035:
+                    raise ValueError('OBJECT_CHANGED') from exc
+                raise
+            # Release the staged handle first: it holds DELETE access without
+            # delete sharing, which would collide with this verification open.
+            handle.close()
+            final = client.open(path, directory=False)
+            final_identity = client.identity(final)
+            if final_identity != identity:
+                # The rename landed on a different object; never sign a foreign file.
+                raise ValueError('OBJECT_CHANGED')
+            result = dict(bytes=str(offset), objectId=final_identity, sha256=digest.hexdigest(),
+                          sizeBytes=str(final.end_of_file),
+                          modifiedAt=iso_ms(final.last_write_time))
+            residual = False
+            try:
+                cleanup = FileDispositionInformation()
+                cleanup['delete_pending'] = True
+                client.set_info(target, cleanup)
+            except Exception:
+                # The staged note is in place; the backup stays registered for the
+                # server's identity-based cleanup instead of failing the save.
+                residual = True
+            emit(result={**result, 'residual': residual})
         else:
             raise ValueError('INVALID_OPERATION')
     finally:

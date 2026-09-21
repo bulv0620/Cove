@@ -35,7 +35,7 @@ test('image hosting loading and unavailable states use the full-height placehold
   assert.match(availableBranch, /\{header\}/);
 });
 
-test('image hosting and files share the full-height page-session layout', () => {
-  assert.match(workspaceSource, /\['files', 'images'\]\.includes\(route\.id\)/);
+test('image hosting, files and notes share the full-height page-session layout', () => {
+  assert.match(workspaceSource, /\['files', 'images', 'notes'\]\.includes\(route\.id\)/);
   assert.match(workspaceSource, /h-\[calc\(100dvh-6\.75rem\)\]/);
 });

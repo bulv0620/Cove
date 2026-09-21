@@ -1,0 +1,281 @@
+/*
+ * MDXEditor intentionally ships structural/control styles only. Tailwind's
+ * preflight resets headings, lists and blockquotes, so the note surface needs
+ * an explicit, scoped typography layer to remain genuinely WYSIWYG.
+ */
+.cove-mdx-editor {
+  min-height: 100%;
+  background: transparent;
+  color: hsl(var(--foreground));
+}
+
+.cove-mdx-editor .mdxeditor-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  gap: 0.125rem;
+  border-bottom: 1px solid hsl(var(--border));
+  border-radius: 0;
+  background: hsl(var(--background) / 0.96);
+  backdrop-filter: blur(10px);
+}
+
+/* The contenteditable node also carries MDXEditor's own padding, so this
+ * selector outranks it rather than relying on stylesheet order. The surface
+ * fills the editor pane with a readable gutter; the max width only binds on
+ * very wide monitors, where a full-bleed line would be too long to read. */
+.cove-mdx-editor .cove-markdown-content {
+  width: min(100%, 72rem);
+  min-height: 100%;
+  margin-inline: auto;
+  padding: 2rem clamp(1.5rem, 4vw, 3.5rem) 4rem;
+  color: hsl(var(--foreground));
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+
+.cove-markdown-content > :first-child {
+  margin-top: 0;
+}
+
+.cove-markdown-content > :last-child {
+  margin-bottom: 0;
+}
+
+.cove-markdown-content p {
+  margin-block: 0.85rem;
+}
+
+.cove-markdown-content h1,
+.cove-markdown-content h2,
+.cove-markdown-content h3,
+.cove-markdown-content h4,
+.cove-markdown-content h5,
+.cove-markdown-content h6 {
+  margin-block: 1.65em 0.65em;
+  color: hsl(var(--foreground));
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+
+.cove-markdown-content h1 {
+  padding-bottom: 0.35em;
+  border-bottom: 1px solid hsl(var(--border));
+  font-size: 2rem;
+}
+
+.cove-markdown-content h2 {
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid hsl(var(--border));
+  font-size: 1.55rem;
+}
+
+.cove-markdown-content h3 {
+  font-size: 1.3rem;
+}
+
+.cove-markdown-content h4 {
+  font-size: 1.12rem;
+}
+
+.cove-markdown-content h5 {
+  font-size: 1rem;
+}
+
+.cove-markdown-content h6 {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.9rem;
+}
+
+.cove-markdown-content ul,
+.cove-markdown-content ol {
+  margin-block: 0.85rem;
+  padding-left: 1.65rem;
+}
+
+.cove-markdown-content ul {
+  list-style: disc;
+}
+
+.cove-markdown-content ol {
+  list-style: decimal;
+}
+
+.cove-markdown-content ul ul {
+  list-style: circle;
+}
+
+.cove-markdown-content ul ul ul {
+  list-style: square;
+}
+
+.cove-markdown-content li {
+  margin-block: 0.25rem;
+  padding-left: 0.2rem;
+}
+
+.cove-markdown-content li > ul,
+.cove-markdown-content li > ol {
+  margin-block: 0.25rem;
+}
+
+.cove-markdown-content li[role='checkbox'] {
+  list-style: none;
+}
+
+.cove-markdown-content li[role='checkbox']::before {
+  margin-left: -1.45rem;
+}
+
+.cove-markdown-content blockquote {
+  margin-block: 1.15rem;
+  padding: 0.15rem 1rem;
+  border-left: 0.25rem solid hsl(var(--primary) / 0.55);
+  color: hsl(var(--muted-foreground));
+}
+
+.cove-markdown-content blockquote > :first-child {
+  margin-top: 0;
+}
+
+.cove-markdown-content blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+.cove-markdown-content a {
+  color: hsl(var(--primary));
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: hsl(var(--primary) / 0.4);
+  text-underline-offset: 0.18em;
+}
+
+.cove-markdown-content a:hover {
+  text-decoration-color: currentColor;
+}
+
+.cove-markdown-content strong {
+  font-weight: 700;
+}
+
+.cove-markdown-content code {
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.3rem;
+  background: hsl(var(--muted));
+  padding: 0.12rem 0.32rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.875em;
+}
+
+.cove-markdown-content pre {
+  margin-block: 1.15rem;
+  overflow-x: auto;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  background: hsl(var(--muted) / 0.72);
+}
+
+.cove-markdown-content pre code {
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.cove-markdown-content hr {
+  height: 1px;
+  margin-block: 2rem;
+  border: 0;
+  background: hsl(var(--border));
+}
+
+.cove-markdown-content table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  margin-block: 1.25rem;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.cove-markdown-content th,
+.cove-markdown-content td {
+  min-width: 7rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid hsl(var(--border));
+  text-align: left;
+  vertical-align: top;
+}
+
+.cove-markdown-content th {
+  background: hsl(var(--muted));
+  font-weight: 650;
+}
+
+.cove-markdown-content tr:nth-child(even) td {
+  background: hsl(var(--muted) / 0.34);
+}
+
+.cove-markdown-content img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin-block: 1.25rem;
+  border-radius: 0.5rem;
+}
+
+/*
+ * Code blocks are edited in CodeMirror, which MDXEditor always styles with its
+ * light theme: in dark mode the fence would be a white box. Only the surface
+ * and the base text are overridden here (the theme's own token palette stays
+ * legible on a dark surface), and `!important` is needed because the theme
+ * rules are generated with a higher-specificity class.
+ */
+.dark .cove-mdx-editor .cm-editor {
+  background-color: hsl(var(--muted) / 0.45) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.dark .cove-mdx-editor .cm-gutters {
+  /* The light theme paints the gutter strip itself, not only its text. */
+  background-color: transparent !important;
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.dark .cove-mdx-editor .cm-activeLine,
+.dark .cove-mdx-editor .cm-activeLineGutter {
+  background-color: hsl(var(--accent) / 0.35) !important;
+}
+
+.dark .cove-mdx-editor .cm-selectionBackground,
+.dark .cove-mdx-editor .cm-content ::selection {
+  background-color: hsl(var(--primary) / 0.3) !important;
+}
+
+/*
+ * MDXEditor hardcodes `--basePageBg: white` (its light token block is the only
+ * place that defines it), and its dropdowns, tooltips and dialogs take their
+ * background from it, so they stayed white in dark mode. The portal container
+ * carries this class too, so the override reaches them.
+ */
+.dark .cove-mdx-editor {
+  --basePageBg: hsl(var(--popover));
+}
+
+@media (max-width: 640px) {
+  .cove-mdx-editor .cove-markdown-content {
+    padding: 1rem 1.25rem 3rem;
+    font-size: 0.975rem;
+  }
+
+  .cove-markdown-content h1 {
+    font-size: 1.7rem;
+  }
+
+  .cove-markdown-content h2 {
+    font-size: 1.4rem;
+  }
+}

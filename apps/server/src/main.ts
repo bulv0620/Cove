@@ -5,6 +5,7 @@ import type { Request, Response, NextFunction } from 'express';
 import type { Server } from 'node:http';
 import { FilesConfig } from './modules/files/files-config';
 import { filesEvents } from './modules/files/files-events';
+import { NotesConfig } from './modules/notes/notes-config';
 import { AppModule } from './app.module';
 import { configureStaticAssets } from './static-assets';
 import type { NestExpressApplication } from '@nestjs/platform-express';
@@ -12,6 +13,11 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const config = app.get(ConfigService);
+
+  // Note bodies travel as JSON; allow the escaped worst case of the size limit.
+  app.useBodyParser('json', {
+    limit: app.get(NotesConfig).maxNoteBytes * 3 + 65_536,
+  });
 
   // Transfers are bounded by byte limits and inactivity, not a fixed total duration.
   const httpServer = app.getHttpServer() as Server;

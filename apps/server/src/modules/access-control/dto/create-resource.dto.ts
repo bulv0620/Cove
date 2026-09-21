@@ -11,7 +11,12 @@ import {
 } from 'class-validator';
 import type { ResourceModuleCode } from '@cove/shared';
 
-const RESOURCE_MODULE_CODES: ResourceModuleCode[] = ['identity', 'infrastructure', 'system'];
+const RESOURCE_MODULE_CODES: ResourceModuleCode[] = [
+  'identity',
+  'infrastructure',
+  'workspace',
+  'system',
+];
 
 export class CreateResourceDto {
   @IsString()

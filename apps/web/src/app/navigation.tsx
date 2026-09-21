@@ -1,10 +1,12 @@
 import { FilesPage } from '@/pages/files/files-page';
 import { ImagesPage } from '@/pages/images/images-page';
+import { NotesPage } from '@/pages/notes/notes-page';
 import {
   FileStack,
   Images,
   LayoutDashboard,
   Layers,
+  NotebookPen,
   ShieldCheck,
   Users,
   type LucideIcon,
@@ -89,6 +91,19 @@ export const navigationGroups: NavigationGroup[] = [
         to: '/images',
         pagePermission: 'infra.images.page',
         component: ImagesPage,
+      },
+    ],
+  },
+  {
+    translationKey: 'navigation.workspace',
+    items: [
+      {
+        id: 'notes',
+        translationKey: 'navigation.notes',
+        icon: NotebookPen,
+        to: '/notes',
+        pagePermission: 'workspace.notes.page',
+        component: NotesPage,
       },
     ],
   },

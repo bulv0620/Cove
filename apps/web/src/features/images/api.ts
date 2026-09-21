@@ -33,6 +33,10 @@ export function uploadImage(
   signal?: AbortSignal,
 ): Promise<HostedImage> {
   return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new ApiError('TRANSFER_INTERRUPTED', 0));
+      return;
+    }
     const request = new XMLHttpRequest();
     request.open('PUT', `${apiBase}/api/images/uploads/${id}/content`);
     request.setRequestHeader('Authorization', `Bearer ${tokenStorage.get() ?? ''}`);

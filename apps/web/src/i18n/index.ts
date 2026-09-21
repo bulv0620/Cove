@@ -1,6 +1,7 @@
 import { readStored, writeStored } from '@/lib/storage';
 import { filesEn, filesZh } from '@/features/files/messages';
 import { imagesEn, imagesZh } from '@/features/images/messages';
+import { notesEn, notesZh } from '@/features/notes/messages';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
@@ -11,6 +12,7 @@ const resources = {
     translation: {
       files: filesEn,
       images: imagesEn,
+      notes: notesEn,
       common: {
         productSubtitle: 'Personal Workspace',
         soon: 'Soon',
@@ -90,6 +92,8 @@ const resources = {
         infrastructure: 'Infrastructure',
         files: 'Files',
         images: 'Image Hosting',
+        workspace: 'Workspace',
+        notes: 'Notes',
         applications: 'Applications',
         network: 'Network',
         backup: 'Backup',
@@ -255,11 +259,13 @@ const resources = {
           all: 'All',
           identity: 'Identity',
           infrastructure: 'Infrastructure',
+          workspace: 'Workspace',
           system: 'System',
         },
         moduleDescriptions: {
           identity: 'Users, roles, and access-control capabilities.',
           infrastructure: 'Files, applications, network, backup, and operational tasks.',
+          workspace: 'Personal workspace content such as Markdown notes.',
           system: 'Platform-wide settings and system administration.',
         },
         name: 'Resource name',
@@ -276,6 +282,7 @@ const resources = {
         iconNetwork: 'Network',
         iconApps: 'Apps',
         iconFiles: 'Files',
+        iconNotes: 'Notes',
         iconAccess: 'Access',
         iconStatus: 'Status',
         sortOrder: 'Sort order',
@@ -310,6 +317,7 @@ const resources = {
     translation: {
       files: filesZh,
       images: imagesZh,
+      notes: notesZh,
       common: {
         productSubtitle: '个人工作台',
         soon: '规划中',
@@ -386,6 +394,8 @@ const resources = {
         infrastructure: '基础设施',
         files: '文件',
         images: '图床',
+        workspace: '工作区',
+        notes: '笔记',
         applications: '应用',
         network: '网络',
         backup: '备份',
@@ -537,11 +547,13 @@ const resources = {
           all: '全部',
           identity: '身份管理',
           infrastructure: '基础设施',
+          workspace: '工作区',
           system: '系统',
         },
         moduleDescriptions: {
           identity: '用户、角色与访问控制相关能力。',
           infrastructure: '文件、应用、网络、备份与运维任务。',
+          workspace: '个人工作区内容，如 Markdown 笔记。',
           system: '平台级设置与系统管理能力。',
         },
         name: '资源名称',
@@ -558,6 +570,7 @@ const resources = {
         iconNetwork: '网络',
         iconApps: '应用',
         iconFiles: '文件',
+        iconNotes: '笔记',
         iconAccess: '访问',
         iconStatus: '状态',
         sortOrder: '排序值',

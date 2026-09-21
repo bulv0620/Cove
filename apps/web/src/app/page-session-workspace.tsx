@@ -51,6 +51,7 @@ function removeQueriesForRoutes(
     queryClient.removeQueries({ queryKey: ['smb-binding'] });
   }
   if (routeIds.includes('images')) queryClient.removeQueries({ queryKey: ['images'] });
+  if (routeIds.includes('notes')) queryClient.removeQueries({ queryKey: ['notes'] });
 }
 
 export function PageSessionWorkspace(): JSX.Element {
@@ -185,7 +186,7 @@ function PageSessionPanel({
       hidden={!active}
       className={cn(
         'w-full outline-none',
-        ['files', 'images'].includes(route.id)
+        ['files', 'images', 'notes'].includes(route.id)
           ? 'h-[calc(100dvh-6.75rem)] max-w-none overflow-hidden'
           : 'mx-auto max-w-[1440px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8',
       )}

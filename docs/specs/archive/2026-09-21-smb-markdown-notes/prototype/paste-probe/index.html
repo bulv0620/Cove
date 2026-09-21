@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="utf-8" />
+    <title>Notes 粘贴诊断</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      body {
+        margin: 0 auto;
+        max-width: 60rem;
+        padding: 1.5rem;
+        font:
+          14px/1.6 system-ui,
+          -apple-system,
+          'Segoe UI',
+          sans-serif;
+      }
+      h1 {
+        font-size: 1.15rem;
+      }
+      p {
+        margin: 0.4rem 0;
+      }
+      #drop {
+        min-height: 8rem;
+        margin: 0.75rem 0;
+        padding: 0.75rem;
+        border: 1px dashed #8a8a8a;
+        border-radius: 8px;
+      }
+      h2 {
+        margin: 1.25rem 0 0.35rem;
+        font-size: 0.95rem;
+      }
+      textarea {
+        width: 100%;
+        height: 12rem;
+        box-sizing: border-box;
+        font:
+          12px/1.5 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+        white-space: pre;
+      }
+      button {
+        margin-top: 0.75rem;
+        padding: 0.45rem 0.9rem;
+        border: 1px solid #8a8a8a;
+        border-radius: 6px;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+      }
+      #status {
+        margin-left: 0.75rem;
+        opacity: 0.7;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Notes 粘贴诊断</h1>
+    <p>
+      用途：把 Typora 里复制的那段内容（包含代码块）粘贴到下面的虚线框里，然后点「复制诊断
+      JSON」，把提示的内容贴回对话即可。页面不上传任何数据。
+    </p>
+    <div id="drop" contenteditable="true">在这里粘贴（Ctrl/Cmd + V）…</div>
+
+    <h2>1. 剪贴板里 &lt;pre&gt; 的原始 HTML（前 3 个）</h2>
+    <textarea id="html" readonly></textarea>
+
+    <h2>2. 当前规范化算法对它的输出</h2>
+    <textarea id="normalized" readonly></textarea>
+
+    <h2>3. 剪贴板纯文本（前 3000 字符）</h2>
+    <textarea id="plain" readonly></textarea>
+
+    <button id="copy" type="button">复制诊断 JSON</button>
+    <span id="status"></span>
+
+    <script>
+      // 诊断用的算法副本，与 apps/web/src/features/notes/paste-html.ts 保持一致。
+      const LINE_TAGS = new Set(['PRE', 'DIV', 'P', 'LI', 'TR', 'SECTION']);
+      const CHROME_SELECTOR = [
+        '.CodeMirror-gutter-wrapper',
+        '.CodeMirror-gutter-elt',
+        '.CodeMirror-linenumber',
+        '.CodeMirror-measure',
+        '.CodeMirror-cursor',
+        '.code-tooltip',
+      ].join(',');
+
+      function joinRuns(runs) {
+        const lines = [];
+        let currentBlock = null;
+        for (const run of runs) {
+          const last = lines.length - 1;
+          if (currentBlock !== null && run.block === currentBlock && last >= 0) {
+            lines[last] = `${lines[last]}${run.text}`;
+            continue;
+          }
+          lines.push(run.text);
+          currentBlock = run.block;
+        }
+        while (lines.length > 0 && lines[0].trim() === '') lines.shift();
+        while (lines.length > 0 && lines[lines.length - 1].trim() === '') lines.pop();
+        return lines.join('\n');
+      }
+
+      function hasLineChild(node) {
+        return (
+          node !== null &&
+          Array.from(node.childNodes).some(
+            (child) => child.nodeType === 1 && LINE_TAGS.has(child.tagName),
+          )
+        );
+      }
+
+      function collectRuns(root) {
+        const runs = [];
+        let block = 0;
+        const visit = (node) => {
+          if (node.nodeType === 3) {
+            const text = node.nodeValue || '';
+            if (text === '' || (text.trim() === '' && hasLineChild(node.parentNode))) return;
+            runs.push({ block, text });
+            return;
+          }
+          if (node.nodeType !== 1) return;
+          const element = node;
+          if (element !== root && element.matches(CHROME_SELECTOR)) return;
+          if (element.tagName === 'BR') {
+            block += 1;
+            return;
+          }
+          const startsLine = element !== root && LINE_TAGS.has(element.tagName);
+          if (startsLine) block += 1;
+          const before = runs.length;
+          for (const child of Array.from(element.childNodes)) visit(child);
+          if (startsLine && runs.length === before) runs.push({ block, text: '' });
+          if (startsLine) block += 1;
+        };
+        visit(root);
+        return runs;
+      }
+
+      function codeOf(pre) {
+        return joinRuns(collectRuns(pre));
+      }
+
+      const pretty = (node) => node.outerHTML.replace(/></g, '>\n<').slice(0, 4000);
+      const drop = document.getElementById('drop');
+      const htmlBox = document.getElementById('html');
+      const normalizedBox = document.getElementById('normalized');
+      const plainBox = document.getElementById('plain');
+      const status = document.getElementById('status');
+      let payload = null;
+
+      drop.addEventListener('paste', (event) => {
+        const data = event.clipboardData;
+        const html = data?.getData('text/html') ?? '';
+        const plain = data?.getData('text/plain') ?? '';
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const pres = Array.from(doc.querySelectorAll('pre'));
+        const normalized = pres.map((pre) => codeOf(pre));
+
+        htmlBox.value = pres.length
+          ? pres.slice(0, 3).map(pretty).join('\n\n----- 下一个 <pre> -----\n\n')
+          : '（这次粘贴的 HTML 里没有 <pre>）';
+        normalizedBox.value = normalized
+          .map((text, index) => `#${index + 1}\n${text}`)
+          .join('\n\n');
+        plainBox.value = plain.slice(0, 3000);
+        payload = {
+          preCount: pres.length,
+          pres: pres.slice(0, 3).map((pre) => pre.outerHTML),
+          normalized,
+          plain: plain.slice(0, 3000),
+        };
+        status.textContent = `已读取：${pres.length} 个 <pre>，HTML ${html.length} 字符`;
+      });
+
+      document.getElementById('copy').addEventListener('click', async () => {
+        if (!payload) {
+          status.textContent = '先粘贴内容。';
+          return;
+        }
+        const text = JSON.stringify(payload);
+        try {
+          await navigator.clipboard.writeText(text);
+          status.textContent = `已复制（${text.length} 字符）到剪贴板。`;
+        } catch {
+          // Clipboard API needs a secure context; fall back to a selection.
+          const helper = document.createElement('textarea');
+          helper.value = text;
+          document.body.appendChild(helper);
+          helper.select();
+          document.execCommand('copy');
+          helper.remove();
+          status.textContent = `已复制（${text.length} 字符）到剪贴板。`;
+        }
+      });
+    </script>
+  </body>
+</html>

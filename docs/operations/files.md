@@ -75,6 +75,22 @@ Compose 从既有 `apps/server/.env` 显式注入 SMB/Files 变量到 server 服
 
 应用回滚不撤销 NAS 上已经上传的文件。数据库迁移为新增表；禁用 Files、停止新传输后可保留新增表并回滚到兼容旧应用。临时文件与未知提交需先核对，不能把恢复旧数据库当作 NAS 文件回滚。
 
+## Notes 笔记
+
+Notes 复用同一 SMB 绑定与凭据，无需额外 NAS 配置。升级到包含 Notes 的版本后必须再执行一次 `pnpm db:seed`（Docker 部署由 `migrate` 服务自动完成），否则资源管理中不会出现 Notes 资源与权限：超级管理员绕过权限表、页面仍可用，只有普通角色会缺权限。笔记正文保存在每用户 home 下固定目录 `Markdown Notes/`；目录名可用 `NOTES_ROOT_DIR` 调整（仅接受不含路径分隔符的单级名称），改名不会迁移已有目录。默认限额与运行参数：
+
+```dotenv
+NOTES_MAX_NOTE_BYTES=5242880
+NOTES_MAX_DIRECTORY_ENTRIES=5000
+NOTES_MAX_ACTIVE_SAVES_PER_USER=2
+NOTES_OPERATION_LEASE_MS=60000
+NOTES_OPERATION_RETENTION_MS=604800000
+```
+
+`NOTES_REVISION_SECRET` 为可选 HMAC 密钥，用于不透明 revision 令牌；缺省从 `SMB_CREDENTIAL_KEY` 派生，轮换该密钥会使未保存的 revision 失效（重新打开笔记即可），不会破坏正文。
+
+`NoteWriteOperation` 状态机让保存可跨 Server 重启恢复：恢复轮询按 SMB 对象身份对账，超过 `NOTES_OPERATION_LEASE_MS` 仍停留在准备期的操作按失败清理，超过 `NOTES_OPERATION_RETENTION_MS`（默认 7 天）的终态记录被删除。临时文件与替换备份（`.cove-note-*.prev.part`）只按操作登记的身份清理，从不按前缀批量删除 NAS 文件；保存与外部修改冲突时，备份会保留在 NAS 上作为被替换笔记的最后一份已知内容。重命名与删除同样按对象身份校验，列表加载后被外部替换的文件不会被误改。回滚到不含 Notes 的旧版本时，`Markdown Notes/` 目录与新增表可原样保留。
+
 ## 验证命令
 
 ```sh
