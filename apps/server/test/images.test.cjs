@@ -1,7 +1,10 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { randomUUID } = require('node:crypto');
+const { HTTP_CODE_METADATA } = require('@nestjs/common/constants');
 const { FilesConfig } = require('../dist/modules/files/files-config');
+const { filesError } = require('../dist/modules/files/files-policy');
+const { ImagesController } = require('../dist/modules/images/images.controller');
 const { ImagesService } = require('../dist/modules/images/images.service');
 
 const code = (expected) => (error) => error.getResponse().code === expected;
@@ -56,6 +59,8 @@ function harness() {
   };
   const grants = [];
   const rateKeys = [];
+  const deletedAssetIds = [];
+  const deletedManyAssetIds = [];
   const db = {
     $queryRaw: async () => [],
     smbBinding: { findUnique: async () => binding },
@@ -68,7 +73,14 @@ function harness() {
         return { count: 1 };
       },
       findUniqueOrThrow: async () => asset,
-      deleteMany: async () => ({ count: 1 }),
+      delete: async ({ where }) => {
+        deletedAssetIds.push(where.id);
+        return asset;
+      },
+      deleteMany: async ({ where }) => {
+        deletedManyAssetIds.push(where.id);
+        return { count: 1 };
+      },
     },
     imagePublicGrant: {
       updateMany: async () => ({ count: grants.length }),
@@ -118,8 +130,23 @@ function harness() {
     },
   };
   const service = new ImagesService(db, permissions, bindings, smb, config());
-  return { service, user, calls, grants, rateKeys, db, getAsset: () => asset };
+  return {
+    service,
+    user,
+    calls,
+    grants,
+    rateKeys,
+    deletedAssetIds,
+    deletedManyAssetIds,
+    db,
+    smb,
+    getAsset: () => asset,
+  };
 }
+
+test('image delete endpoint returns no content after a successful removal', () => {
+  assert.equal(Reflect.getMetadata(HTTP_CODE_METADATA, ImagesController.prototype.remove), 204);
+});
 
 test('image upload policy rejects unsupported extensions and files above 25 MiB', async () => {
   const { service, user } = harness();
@@ -165,6 +192,62 @@ test('pending delete recovery only removes the previously registered SMB object'
     calls.find((call) => call.action === 'delete_object'),
     { action: 'delete_object', path: asset.relativePath, objectId: asset.objectId },
   );
+});
+
+test('image delete removes the registered original and its deterministic thumbnail', async () => {
+  const { service, user, calls, deletedAssetIds, getAsset } = harness();
+  const asset = getAsset();
+  await service.remove(user, asset.id);
+  const deletes = calls.filter((call) => call.action === 'delete_object');
+  assert.deepEqual(deletes[0], {
+    action: 'delete_object',
+    path: asset.relativePath,
+    objectId: asset.objectId,
+  });
+  assert.match(deletes[1].path, /^Image Hosting\/\.cove-cache\/thumbnails\/[0-9a-f]{64}\.webp$/);
+  assert.equal(deletes[1].objectId, '42');
+  assert.deepEqual(deletedAssetIds, [asset.id]);
+});
+
+test('pending delete recovery still removes the thumbnail when the original is already absent', async () => {
+  const { service, calls, deletedManyAssetIds, smb, getAsset } = harness();
+  const asset = {
+    ...getAsset(),
+    state: 'CLEANUP_PENDING',
+    cleanupPending: true,
+  };
+  const call = smb.call;
+  smb.call = async (credentials, input) => {
+    if (input.action === 'delete_object' && input.path === asset.relativePath) {
+      calls.push(input);
+      throw filesError('PATH_NOT_FOUND');
+    }
+    return call(credentials, input);
+  };
+  await service.recoverAsset(asset);
+  assert(
+    calls.some(
+      (entry) =>
+        entry.action === 'delete_object' &&
+        /^Image Hosting\/\.cove-cache\/thumbnails\/[0-9a-f]{64}\.webp$/.test(entry.path),
+    ),
+  );
+  assert.deepEqual(deletedManyAssetIds, [asset.id]);
+});
+
+test('thumbnail cleanup failures keep the image queued for recovery', async () => {
+  const { service, user, smb, getAsset } = harness();
+  const asset = getAsset();
+  const call = smb.call;
+  smb.call = async (credentials, input) => {
+    if (input.action === 'stat' && input.path.startsWith('Image Hosting/.cove-cache/thumbnails/'))
+      throw filesError('SMB_UNAVAILABLE');
+    return call(credentials, input);
+  };
+  await assert.rejects(service.remove(user, asset.id), code('SMB_UNAVAILABLE'));
+  assert.equal(getAsset().state, 'CLEANUP_PENDING');
+  assert.equal(getAsset().cleanupPending, true);
+  assert.equal(getAsset().errorCode, 'SMB_UNAVAILABLE');
 });
 
 test('public request buckets are database coordinated and do not persist the raw address', async () => {

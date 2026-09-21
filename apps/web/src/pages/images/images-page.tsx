@@ -273,39 +273,33 @@ export function ImagesPage(): JSX.Element {
 
   if (status.isPending)
     return (
-      <div className="space-y-6">
-        {header}
-        <Card className="flex min-h-48 items-center justify-center">
-          <LoaderCircle className="h-5 w-5 animate-spin text-muted-foreground" />
-        </Card>
+      <div className="flex h-full min-h-0 items-center justify-center bg-card" aria-busy="true">
+        <LoaderCircle className="h-5 w-5 animate-spin text-muted-foreground" />
       </div>
     );
   if (!available)
     return (
-      <div className="space-y-6">
-        {header}
-        <Card className="flex min-h-72 flex-col items-center justify-center gap-4 p-8 text-center">
-          <HardDrive className="h-10 w-10 text-muted-foreground" />
-          <p className="font-medium">{errorText(statusError)}</p>
-          <p className="max-w-md text-sm text-muted-foreground">
-            {t(status.data?.enabled ? 'files.contact' : 'files.configHint')}
-          </p>
-          <div className="flex flex-wrap justify-center gap-2">
-            <Button variant="outline" onClick={() => void status.refetch()}>
-              {t('files.refresh')}
+      <div className="flex h-full min-h-0 flex-col items-center justify-center gap-4 bg-card p-6 text-center">
+        <HardDrive className="h-10 w-10 text-muted-foreground" />
+        <p className="font-medium">{errorText(statusError)}</p>
+        <p className="max-w-md text-sm text-muted-foreground">
+          {t(status.data?.enabled ? 'files.contact' : 'files.configHint')}
+        </p>
+        <div className="flex flex-wrap justify-center gap-2">
+          <Button variant="outline" onClick={() => void status.refetch()}>
+            {t('files.refresh')}
+          </Button>
+          {(user?.isSuperAdmin || user?.permissions.includes('identity.user.page')) && (
+            <Button asChild>
+              <Link to="/users">{t('files.manage')}</Link>
             </Button>
-            {(user?.isSuperAdmin || user?.permissions.includes('identity.user.page')) && (
-              <Button asChild>
-                <Link to="/users">{t('files.manage')}</Link>
-              </Button>
-            )}
-          </div>
-        </Card>
+          )}
+        </div>
       </div>
     );
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto h-full min-h-0 max-w-[1440px] space-y-6 overflow-y-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
       {header}
 
       <Card className="overflow-hidden">

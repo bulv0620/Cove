@@ -39,11 +39,13 @@ specs/
 
 ## 当前 Specs
 
-| Spec                                                                                     | 状态      | 说明                           |
-| ---------------------------------------------------------------------------------------- | --------- | ------------------------------ |
-| [`2026-09-02-unify-environment-file`](2026-09-02-unify-environment-file/spec.md)         | Completed | 统一本地 Server 环境变量文件   |
-| [`2026-09-19-collapsible-sidebar`](2026-09-19-collapsible-sidebar/spec.md)               | Completed | 增加桌面侧栏折叠与本地偏好记忆 |
-| [`2026-09-19-images-development-refresh`](2026-09-19-images-development-refresh/spec.md) | Completed | 修复图床页面开发态刷新 404     |
+| Spec                                                                                     | 状态      | 说明                            |
+| ---------------------------------------------------------------------------------------- | --------- | ------------------------------- |
+| [`2026-09-02-unify-environment-file`](2026-09-02-unify-environment-file/spec.md)         | Completed | 统一本地 Server 环境变量文件    |
+| [`2026-09-19-collapsible-sidebar`](2026-09-19-collapsible-sidebar/spec.md)               | Completed | 增加桌面侧栏折叠与本地偏好记忆  |
+| [`2026-09-19-images-development-refresh`](2026-09-19-images-development-refresh/spec.md) | Completed | 修复图床页面开发态刷新 404      |
+| [`2026-09-19-images-unbound-empty-state`](2026-09-19-images-unbound-empty-state/spec.md) | Completed | 图床未绑定 SMB 时使用整页空占位 |
+| [`2026-09-20-image-delete-cleanup`](2026-09-20-image-delete-cleanup/spec.md)             | Completed | 修复删除误报与缩略图缓存残留    |
 
 ## 归档 Specs
 

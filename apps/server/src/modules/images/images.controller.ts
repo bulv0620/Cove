@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Header,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -69,6 +70,7 @@ export class ImagesController {
   }
 
   @Delete(':id')
+  @HttpCode(204)
   @RequirePermissions('infra.images.page', 'infra.images.delete')
   remove(@CurrentUser() actor: AuthUser, @Param('id') id: string) {
     return this.images.remove(actor, id);

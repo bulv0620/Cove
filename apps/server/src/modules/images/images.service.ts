@@ -100,13 +100,8 @@ export class ImagesService implements OnModuleInit, OnModuleDestroy {
       return;
     }
     if (asset.state === 'CLEANUP_PENDING') {
-      if (!asset.objectId) return;
       try {
-        await this.smb.call(bound.credentials, {
-          action: 'delete_object',
-          path: asset.relativePath,
-          objectId: asset.objectId,
-        });
+        await this.cleanupAssetObjects(bound.credentials, asset);
         await this.db.imageAsset.deleteMany({ where: { id: asset.id } });
       } catch (error) {
         const code = errorCode(error);
@@ -788,20 +783,7 @@ export class ImagesService implements OnModuleInit, OnModuleDestroy {
     await this.revoke(id);
     await this.db.imageAsset.update({ where: { id }, data: { state: 'REVOKED' } });
     try {
-      let objectId = asset.objectId;
-      if (!objectId) {
-        const stat = await this.smb.call<FileEntry>(ctx.credentials, {
-          action: 'stat',
-          path: asset.relativePath,
-        });
-        objectId = stat.objectId ?? null;
-      }
-      if (!objectId) throw filesError('OBJECT_CHANGED');
-      await this.smb.call(ctx.credentials, {
-        action: 'delete_object',
-        path: asset.relativePath,
-        objectId,
-      });
+      await this.cleanupAssetObjects(ctx.credentials, asset);
       await this.db.imageAsset.delete({ where: { id } });
       await this.audit(actor.id, 'images.delete', id, 'SUCCESS').catch(() => undefined);
     } catch (error) {
@@ -823,6 +805,46 @@ export class ImagesService implements OnModuleInit, OnModuleDestroy {
     });
     if (!asset || !['PRIVATE', 'PUBLIC'].includes(asset.state)) throw filesError('PATH_NOT_FOUND');
     return { ...ctx, asset };
+  }
+
+  private thumbnailPath(asset: ImageAsset): string {
+    const fingerprint = createHash('sha256')
+      .update(
+        `${asset.objectId ?? asset.id}:${asset.sourceModifiedAt?.getTime() ?? 0}:${asset.sizeBytes}`,
+      )
+      .digest('hex');
+    return `${THUMBNAILS}/${fingerprint}.webp`;
+  }
+
+  private async deleteObjectIfPresent(
+    credentials: { username: string; password: string },
+    path: string,
+    knownObjectId?: string | null,
+  ): Promise<void> {
+    let objectId = knownObjectId;
+    if (!objectId) {
+      try {
+        const stat = await this.smb.call<FileEntry>(credentials, { action: 'stat', path });
+        objectId = stat.objectId ?? null;
+      } catch (error) {
+        if (errorCode(error) === 'PATH_NOT_FOUND') return;
+        throw error;
+      }
+    }
+    if (!objectId) throw filesError('OBJECT_CHANGED');
+    try {
+      await this.smb.call(credentials, { action: 'delete_object', path, objectId });
+    } catch (error) {
+      if (errorCode(error) !== 'PATH_NOT_FOUND') throw error;
+    }
+  }
+
+  private async cleanupAssetObjects(
+    credentials: { username: string; password: string },
+    asset: ImageAsset,
+  ): Promise<void> {
+    await this.deleteObjectIfPresent(credentials, asset.relativePath, asset.objectId);
+    await this.deleteObjectIfPresent(credentials, this.thumbnailPath(asset));
   }
 
   private async stream(
@@ -863,12 +885,7 @@ export class ImagesService implements OnModuleInit, OnModuleDestroy {
     const { asset, credentials } = await this.ownedAsset(actor, id);
     await this.ensureDirectory(credentials, CACHE);
     await this.ensureDirectory(credentials, THUMBNAILS);
-    const fingerprint = createHash('sha256')
-      .update(
-        `${asset.objectId ?? asset.id}:${asset.sourceModifiedAt?.getTime() ?? 0}:${asset.sizeBytes}`,
-      )
-      .digest('hex');
-    const cachePath = `${THUMBNAILS}/${fingerprint}.webp`;
+    const cachePath = this.thumbnailPath(asset);
     try {
       await this.smb.call(credentials, { action: 'stat', path: cachePath });
       return this.stream(credentials, cachePath, response, 'image/webp', 'private, max-age=86400');

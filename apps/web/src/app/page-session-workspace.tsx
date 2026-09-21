@@ -185,7 +185,7 @@ function PageSessionPanel({
       hidden={!active}
       className={cn(
         'w-full outline-none',
-        route.id === 'files'
+        ['files', 'images'].includes(route.id)
           ? 'h-[calc(100dvh-6.75rem)] max-w-none overflow-hidden'
           : 'mx-auto max-w-[1440px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8',
       )}
